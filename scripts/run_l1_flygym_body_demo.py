@@ -29,7 +29,7 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    from digital_fruit_fly import run_l1_body_demo
+    from src import run_l1_body_demo
 
     args = parse_args()
     outputs = run_l1_body_demo(
