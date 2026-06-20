@@ -1,0 +1,17 @@
+{
+  "run": {
+    "duration_s": 3.0,
+    "seed": 0,
+    "pattern": "sweep",
+    "warmup_s": 0.02,
+    "log_every_steps": 100
+  },
+  "body": {
+    "arena_half_size_mm": 150.0
+  },
+  "render": {
+    "camera_res": [240, 320],
+    "output_fps": 25,
+    "playback_speed": 0.2
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "run": {
+    "duration_s": 5.0,
+    "seed": 0,
+    "warmup_s": 0.02,
+    "log_every_steps": 100
+  },
+  "scene": {
+    "arena_half_size_mm": 150.0,
+    "food_position_mm": [80.0, 25.0],
+    "food_cue_radius_mm": 120.0,
+    "food_contact_radius_mm": 1.05,
+    "dust_accumulation_rate_per_s": 0.22,
+    "dust_threshold": 1.0
+  },
+  "bridge": {
+    "grooming_duration_s": 1.0,
+    "feeding_hold_s": 0.8,
+    "max_turn_drive": 0.55
+  },
+  "render": {
+    "camera_res": [240, 320],
+    "output_fps": 25,
+    "playback_speed": 0.2
+  },
+  "camera": {
+    "pos_offset": [0, -18, 14],
+    "fovy": 50.0
+  }
+}
