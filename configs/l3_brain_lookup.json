@@ -1,0 +1,34 @@
+{
+  "source": {
+    "repo_path": "external/drosophila_brain_model",
+    "mn9_flywire_id": 720575940660219265,
+    "example_t_run_s": 1.0,
+    "example_n_run": 30,
+    "sugar_example_files": [
+      {
+        "path": "results/example/sugarR_100Hz.parquet",
+        "exp_name": "sugarR_100Hz",
+        "stimulus_hz": 100.0,
+        "food_cue": 0.5
+      },
+      {
+        "path": "results/example/sugarR.parquet",
+        "exp_name": "sugarR",
+        "stimulus_hz": 150.0,
+        "food_cue": 1.0
+      }
+    ]
+  },
+  "grooming_proxy": {
+    "dust_levels": [0.0, 0.25, 0.5, 0.75, 1.0],
+    "max_input_hz": 150.0,
+    "duration_s": 0.5,
+    "trials": 5,
+    "seed": 7
+  },
+  "output": {
+    "lookup_csv": "data/l3_brain_readout_lookup.csv",
+    "metadata_json": "data/l3_brain_readout_lookup_metadata.json",
+    "report_json": "outputs/l3_brain/l3_brain_readout_lookup_report.json"
+  }
+}

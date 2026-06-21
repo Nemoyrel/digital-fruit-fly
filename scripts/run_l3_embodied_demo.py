@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI wrapper for the L1 FlyGym body-only demo."""
+"""CLI wrapper for the L3 lookup-table-driven embodied loop demo."""
 
 from __future__ import annotations
 
@@ -15,33 +15,35 @@ if str(SRC_DIR) not in sys.path:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run the L1 FlyGym body demo.")
+    parser = argparse.ArgumentParser(description="Run the L3 embodied-loop demo.")
     parser.add_argument("--duration", type=float, default=None)
     parser.add_argument("--seed", type=int, default=None)
-    parser.add_argument(
-        "--pattern",
-        choices=("straight", "left", "right", "sweep"),
-        default=None,
-    )
+    parser.add_argument("--log-every-steps", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--no-video", action="store_true")
+    parser.add_argument("--no-plot", action="store_true")
     return parser.parse_args()
 
 
 def main() -> None:
-    from digital_fruit_fly import run_l1_body_demo
+    from digital_fruit_fly import run_l3_embodied_demo
 
     args = parse_args()
-    outputs = run_l1_body_demo(
+    outputs = run_l3_embodied_demo(
         duration_s=args.duration,
         seed=args.seed,
-        pattern=args.pattern,
+        log_every_steps=args.log_every_steps,
         output_dir=args.output_dir,
         no_video=args.no_video,
+        no_plot=args.no_plot,
     )
     print(f"telemetry: {outputs['telemetry_csv']}")
     if outputs["video_mp4"] is not None:
         print(f"video: {outputs['video_mp4']}")
+    if outputs["telemetry_plot_png"] is not None:
+        print(f"plot: {outputs['telemetry_plot_png']}")
+    print(f"metadata: {outputs['metadata_json']}")
+    print(f"events: {outputs['events']}")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,8 @@ OUTPUT_DIR = PROJECT_ROOT / "outputs"
 
 L1_CONFIG_PATH = CONFIG_DIR / "l1_body.json"
 L2_CONFIG_PATH = CONFIG_DIR / "l2_embodied_loop.json"
+L3_CONFIG_PATH = CONFIG_DIR / "l3_embodied_loop.json"
+L3_LOOKUP_CONFIG_PATH = CONFIG_DIR / "l3_brain_lookup.json"
 
 
 def configure_local_caches(output_dir: Path) -> None:

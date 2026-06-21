@@ -1,0 +1,53 @@
+{
+  "level": "L3",
+  "description": "Compact offline brain readout table for embodied demo.",
+  "lookup_csv": "data/l3_brain_readout_lookup.csv",
+  "sugar_mn9": {
+    "mn9_flywire_id": 720575940660219265,
+    "sugar_rates_hz": {
+      "sugarR_100Hz": 67.03333333333333,
+      "sugarR": 93.26666666666667
+    },
+    "sugar_rate_std_hz": {
+      "sugarR_100Hz": 6.595368745482612,
+      "sugarR": 3.1510139461590594
+    },
+    "upstream_commit": "91bdd1e7dcf193f3e7ca5a8933497fcef63b7960"
+  },
+  "grooming_proxy": {
+    "duration_s": 0.5,
+    "trials": 5,
+    "max_input_hz": 150.0,
+    "lif_constants": {
+      "v_0_mV": -52.0,
+      "v_rst_mV": -52.0,
+      "v_th_mV": -45.0,
+      "t_mbr_ms": 20.0,
+      "tau_ms": 5.0,
+      "refractory_ms": 2.2,
+      "w_syn_mV": 0.275,
+      "f_poi": 250
+    },
+    "raw_rates_hz": [
+      0.0,
+      35.6,
+      62.4,
+      82.0,
+      101.6
+    ],
+    "source_reference": "external/drosophila_brain_model/model.py default_params",
+    "note": "Small Brian2 LIF proxy using Shiu-style LIF constants; not a full connectome run."
+  },
+  "sources": [
+    "external/drosophila_brain_model/Readme.md",
+    "external/drosophila_brain_model/example.ipynb",
+    "external/drosophila_brain_model/model.py",
+    "external/drosophila_brain_model/results/example/*.parquet",
+    "https://doi.org/10.17617/3.CZODIW"
+  ],
+  "boundary": [
+    "Sugar/MN9 rows are derived from philshiu/Drosophila_brain_model example spike parquet files.",
+    "Mechanosensory dust/grooming rows are a small Brian2 LIF proxy using Shiu-style constants, not the full connectome model.",
+    "This table is a compact engineering bridge for L3, not a full brain upload or Eon private-code reproduction."
+  ]
+}

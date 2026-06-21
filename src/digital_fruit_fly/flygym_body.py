@@ -1,4 +1,4 @@
-"""Reusable FlyGym body simulation wrapper for L1/L2 demos."""
+"""Reusable FlyGym body simulation wrapper for L1-L3 demos."""
 
 from __future__ import annotations
 

@@ -22,7 +22,7 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
         json.dump(data, f, indent=2)
 
 
-def make_l2_plot(telemetry_rows: list[dict[str, Any]], plot_path: Path) -> None:
+def make_embodied_plot(telemetry_rows: list[dict[str, Any]], plot_path: Path) -> None:
     import matplotlib.pyplot as plt
 
     if not telemetry_rows:

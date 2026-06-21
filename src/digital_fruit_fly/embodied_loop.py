@@ -1,4 +1,4 @@
-"""L2 rule-based embodied-loop demo runner."""
+"""Shared embodied FlyGym loop used by L2 and L3 demos."""
 
 from __future__ import annotations
 
@@ -6,41 +6,32 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .brain_bridge import RuleBrainBridge, readout_to_descending_signal
-from .config import (
-    L2_CONFIG_PATH,
-    OUTPUT_DIR,
-    apply_run_overrides,
-    configure_local_caches,
-    load_json_config,
-)
+from .brain_bridge import BrainBridge, readout_to_descending_signal
+from .config import configure_local_caches
 from .flygym_body import FlyGymLocomotionBody, make_l2_scene_markers
 from .state import BehaviorState
-from .telemetry import make_l2_plot, write_csv, write_json
+from .telemetry import make_embodied_plot, write_csv, write_json
 from .virtual_environment import VirtualEnvironment
 
 
-def run_l2_embodied_demo(
+def run_embodied_loop(
     *,
-    duration_s: float | None = None,
-    seed: int | None = None,
-    log_every_steps: int | None = None,
-    output_dir: Path | None = None,
+    config: dict[str, Any],
+    config_path: Path,
+    bridge: BrainBridge,
+    output_dir: Path,
+    stem_prefix: str,
+    level: str,
+    description: str,
+    notes: list[str],
+    sources: list[str],
     no_video: bool = False,
     no_plot: bool = False,
 ) -> dict[str, Any]:
-    config = apply_run_overrides(
-        load_json_config(L2_CONFIG_PATH),
-        duration_s=duration_s,
-        seed=seed,
-        log_every_steps=log_every_steps,
-    )
-    out_dir = output_dir or OUTPUT_DIR / "l2_embodied_loop"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    configure_local_caches(out_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    configure_local_caches(output_dir)
 
     scene = VirtualEnvironment.from_dict(config["scene"])
-    bridge = RuleBrainBridge(**config["bridge"])
     body = FlyGymLocomotionBody(
         arena_half_size_mm=float(config["scene"]["arena_half_size_mm"]),
         seed=int(config["run"]["seed"]),
@@ -135,25 +126,25 @@ def run_l2_embodied_demo(
             last_logged_behavior = behavior
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    stem = f"l2_embodied_loop_{timestamp}"
-    telemetry_path = out_dir / f"{stem}.csv"
+    stem = f"{stem_prefix}_{timestamp}"
+    telemetry_path = output_dir / f"{stem}.csv"
     write_csv(telemetry_path, rows)
 
     video_path = None
     if not no_video:
-        video_path = out_dir / f"{stem}.mp4"
+        video_path = output_dir / f"{stem}.mp4"
         body.save_video(video_path)
 
     plot_path = None
     if not no_plot:
-        plot_path = out_dir / f"{stem}_telemetry.png"
-        make_l2_plot(rows, plot_path)
+        plot_path = output_dir / f"{stem}_telemetry.png"
+        make_embodied_plot(rows, plot_path)
 
-    metadata_path = out_dir / f"{stem}_metadata.json"
+    metadata_path = output_dir / f"{stem}_metadata.json"
     metadata = {
-        "level": "L2",
-        "description": "Rule-based sensory_state to brain_readout embodied loop.",
-        "config_path": str(L2_CONFIG_PATH),
+        "level": level,
+        "description": description,
+        "config_path": str(config_path),
         "config": config,
         "outputs": {
             "telemetry_csv": str(telemetry_path),
@@ -162,15 +153,8 @@ def run_l2_embodied_demo(
         },
         "events": event_times,
         "behavior_counts": behavior_counts,
-        "notes": [
-            "Brain readouts are rule-based L2 placeholders.",
-            "Dust is global fictive dust that accumulates on the fly until grooming clears it.",
-            "Grooming/feeding are state outputs only; no custom grooming or proboscis actuators are used in L2.",
-            "L3 should replace readout_source with empirical LIF lookup-table outputs.",
-        ],
-        "sources": [
-            "https://eon.systems/updates/embodied-brain-emulation",
-        ],
+        "notes": notes,
+        "sources": sources,
     }
     write_json(metadata_path, metadata)
     body.close()
