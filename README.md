@@ -9,13 +9,15 @@
 - L1：FlyGym/NeuroMechFly 身体基线可运行；
 - L2：规则版 `sensory_state -> brain_readout -> behavior_state -> action` 闭环可运行；
 - L3：离线脑读出查表已生成，并通过 `LookupBrainBridge` 接入 FlyGym 身体仿真；
-- L4：实时在线 LIF 仍是后续可选目标，尚未实现。
+- L4：`level4-branch` 上新增了小型在线 LIF proxy 尝试、脑状态动画和实时 telemetry/benchmark 输出。
 
 L3 的关键边界：
 
 - sugar/MN9 行来自 `philshiu/Drosophila_brain_model` 上游示例 spike parquet；
 - dust/grooming 行当前是小型 Brian2 LIF proxy，使用 Shiu 模型同风格的 LIF 常量，不是完整 connectome 运行；
 - 行为门控、turn/forward 映射和 FlyGym 控制是本项目自己的工程桥接。
+- L4 在线部分是小型 LIF-style proxy 和 timing benchmark，不是完整 Shiu connectome 在线运行。
+- L4/L2/L3 的场景感知现在不会在气味场外泄漏食物方向；`food_cue == 0` 时使用 seeded random search，进入 cue radius 后才使用趋化 `turn_bias`；L4 额外用 `search_turn_gain` 放大气味外搜索转向，避免视频里随机搜索过弱。
 
 ## 目录结构
 
@@ -53,6 +55,13 @@ conda activate flygym_env
 python scripts/run_l3_embodied_demo.py --duration 6.5 --log-every-steps 50
 ```
 
+运行 L4 online LIF 尝试：
+
+```bash
+conda activate flygym_env
+python scripts/run_l4_embodied_demo.py --duration 8 --log-every-steps 50
+```
+
 无视频快速检查：
 
 ```bash
@@ -76,6 +85,19 @@ L3 demo 运行后会在 `outputs/l3_embodied_loop/` 下生成：
 - `*_metadata.json`：配置、事件时间、输出路径和边界说明。
 
 最近一次本地验证中，dust 在约 `4.5655s` 达到阈值并进入 grooming，在约 `5.5656s` 清零后回到 foraging。
+
+## L4 产物
+
+L4 demo 运行后会在 `outputs/l4_embodied_loop/` 下生成：
+
+- `*.mp4`：FlyGym 身体运动视频；
+- `*_brain_state.mp4`：脑模型 proxy 实时状态动画，如果本机 ffmpeg 可用；
+- `*_brain_state.gif`：ffmpeg 不可用时的脑状态动画 fallback；
+- `*_l4_telemetry.png`：包含 `dust_level`、`food_cue`、readout、behavior 和在线更新时间的图；
+- `*_brain_benchmark.json`：在线脑更新耗时、缓存步数、目标同步频率和是否达标；
+- `*.csv` / `*_metadata.json`：逐帧 telemetry 和复现实验 metadata。
+
+详见 `docs/l4_online_lif.md`。
 
 ## 上游依赖
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .brain_bridge import BrainBridge, readout_to_descending_signal
 from .config import configure_local_caches
@@ -27,6 +27,10 @@ def run_embodied_loop(
     sources: list[str],
     no_video: bool = False,
     no_plot: bool = False,
+    extra_outputs_builder: Callable[
+        [list[dict[str, Any]], dict[str, Any], Path, str], dict[str, str | None]
+    ]
+    | None = None,
 ) -> dict[str, Any]:
     output_dir.mkdir(parents=True, exist_ok=True)
     configure_local_caches(output_dir)
@@ -94,35 +98,37 @@ def run_embodied_loop(
             or bool(brain_readout.dust_clearance)
         )
         if should_log:
-            rows.append(
-                {
-                    "step": step,
-                    "time_s": sensory_state.time_s,
-                    "thorax_x_mm": pose.thorax_xyz_mm[0],
-                    "thorax_y_mm": pose.thorax_xyz_mm[1],
-                    "thorax_z_mm": pose.thorax_xyz_mm[2],
-                    "heading_x": pose.heading_xy[0],
-                    "heading_y": pose.heading_xy[1],
-                    "food_cue": sensory_state.food_cue,
-                    "sensory_turn_bias": sensory_state.turn_bias,
-                    "dust_level": sensory_state.dust_level,
-                    "dust_threshold_reached": int(sensory_state.dust_threshold_reached),
-                    "dust_clearance": brain_readout.dust_clearance,
-                    "food_contact": int(sensory_state.food_contact),
-                    "food_distance_mm": sensory_state.food_distance_mm,
-                    "behavior_state": behavior,
-                    "forward_drive": brain_readout.forward_drive,
-                    "readout_turn_bias": brain_readout.turn_bias,
-                    "grooming_score": brain_readout.grooming_score,
-                    "feeding_score": brain_readout.feeding_score,
-                    "mn9_rate_hz": brain_readout.mn9_rate_hz,
-                    "readout_source": brain_readout.source,
-                    "descending_left": left,
-                    "descending_right": right,
-                    "mean_joint_angle_rad": float(action.joint_angles.mean()),
-                    "adhesion_on_count": int(action.adhesion_onoff.sum()),
-                }
-            )
+            row = {
+                "step": step,
+                "time_s": sensory_state.time_s,
+                "thorax_x_mm": pose.thorax_xyz_mm[0],
+                "thorax_y_mm": pose.thorax_xyz_mm[1],
+                "thorax_z_mm": pose.thorax_xyz_mm[2],
+                "heading_x": pose.heading_xy[0],
+                "heading_y": pose.heading_xy[1],
+                "food_cue": sensory_state.food_cue,
+                "sensory_turn_bias": sensory_state.turn_bias,
+                "dust_level": sensory_state.dust_level,
+                "dust_threshold_reached": int(sensory_state.dust_threshold_reached),
+                "dust_clearance": brain_readout.dust_clearance,
+                "food_contact": int(sensory_state.food_contact),
+                "food_distance_mm": sensory_state.food_distance_mm,
+                "behavior_state": behavior,
+                "forward_drive": brain_readout.forward_drive,
+                "readout_turn_bias": brain_readout.turn_bias,
+                "grooming_score": brain_readout.grooming_score,
+                "feeding_score": brain_readout.feeding_score,
+                "mn9_rate_hz": brain_readout.mn9_rate_hz,
+                "readout_source": brain_readout.source,
+                "descending_left": left,
+                "descending_right": right,
+                "mean_joint_angle_rad": float(action.joint_angles.mean()),
+                "adhesion_on_count": int(action.adhesion_onoff.sum()),
+            }
+            telemetry_fields = getattr(bridge, "telemetry_fields", None)
+            if telemetry_fields is not None:
+                row.update(telemetry_fields())
+            rows.append(row)
             last_logged_behavior = behavior
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -156,13 +162,19 @@ def run_embodied_loop(
         "notes": notes,
         "sources": sources,
     }
+    extra_outputs: dict[str, str | None] = {}
+    if extra_outputs_builder is not None:
+        extra_outputs = extra_outputs_builder(rows, metadata, output_dir, stem)
+        metadata["outputs"].update(extra_outputs)
     write_json(metadata_path, metadata)
     body.close()
 
-    return {
+    result = {
         "telemetry_csv": telemetry_path,
         "video_mp4": video_path,
         "telemetry_plot_png": plot_path,
         "metadata_json": metadata_path,
         "events": event_times,
     }
+    result.update(extra_outputs)
+    return result
