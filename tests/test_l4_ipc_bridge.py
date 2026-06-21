@@ -1,5 +1,13 @@
 import socket
+from pathlib import Path
+import sys
 import unittest
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from digital_fruit_fly.ipc_protocol import BrainReadoutMessage
 from digital_fruit_fly.l4_ipc_bridge import IpcBrainBridge
@@ -43,8 +51,8 @@ class IpcBrainBridgeTest(unittest.TestCase):
                 feeding_score=0.0,
                 mn9_rate_hz=8.0,
                 dust_clearance=0.0,
-                source="brain_worker:brian2_proxy",
-                backend="brian2_proxy",
+                source="brain_worker:shiu_full",
+                backend="shiu_full",
                 brain_wall_time_ms=1.0,
                 brain_simulated_window_s=0.015,
                 cache_hit=False,
@@ -68,8 +76,8 @@ class IpcBrainBridgeTest(unittest.TestCase):
                 feeding_score=1.0,
                 mn9_rate_hz=90.0,
                 dust_clearance=0.0,
-                source="brain_worker:brian2_proxy",
-                backend="brian2_proxy",
+                source="brain_worker:shiu_full",
+                backend="shiu_full",
                 brain_wall_time_ms=1.0,
                 brain_simulated_window_s=0.015,
                 cache_hit=False,
@@ -80,7 +88,7 @@ class IpcBrainBridgeTest(unittest.TestCase):
         readout = bridge.step(make_state())
 
         self.assertEqual(readout.behavior_state, BehaviorState.FEEDING)
-        self.assertEqual(readout.source, "brain_worker:brian2_proxy")
+        self.assertEqual(readout.source, "brain_worker:shiu_full")
         self.assertEqual(bridge.request_count, 1)
 
     def test_timeout_returns_previous_readout(self):
@@ -106,6 +114,38 @@ class IpcBrainBridgeTest(unittest.TestCase):
         self.assertEqual(fields["ipc_timeout_count"], 1)
         self.assertEqual(fields["ipc_backend"], "timeout_cache")
         self.assertIn("ipc_brain_wall_time_ms", fields)
+
+    def test_telemetry_fields_include_full_backend_extras(self):
+        client = FakeClient(
+            BrainReadoutMessage(
+                request_id=1,
+                behavior_state="feeding",
+                forward_drive=0.0,
+                turn_bias=0.0,
+                grooming_score=0.0,
+                feeding_score=1.0,
+                mn9_rate_hz=90.0,
+                dust_clearance=0.0,
+                source="brain_worker:shiu_full",
+                backend="shiu_full",
+                brain_wall_time_ms=1.0,
+                brain_simulated_window_s=0.015,
+                cache_hit=False,
+                extra={
+                    "grooming_rate_hz": 22.0,
+                    "shiu_full_used": True,
+                    "brain_window_s": 0.015,
+                },
+            )
+        )
+        bridge = IpcBrainBridge(client=client)
+        bridge.step(make_state())
+
+        fields = bridge.telemetry_fields()
+
+        self.assertEqual(fields["ipc_grooming_rate_hz"], 22.0)
+        self.assertEqual(fields["ipc_shiu_full_used"], 1)
+        self.assertEqual(fields["ipc_brain_window_s"], 0.015)
 
 
 if __name__ == "__main__":

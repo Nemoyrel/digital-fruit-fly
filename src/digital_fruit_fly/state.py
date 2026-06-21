@@ -1,4 +1,4 @@
-"""Small shared state objects for the embodied loop."""
+"""Small shared state objects for the L4 embodied loop."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from enum import Enum
 
 
 class BehaviorState(str, Enum):
-    """Finite behavior states used by the L2 rule bridge."""
+    """Finite behavior states used by the L4 brain/body bridge."""
 
     FORAGING = "foraging"
     GROOMING = "grooming"
@@ -30,11 +30,7 @@ class SensoryState:
 
 @dataclass(frozen=True)
 class BrainReadout:
-    """Low-dimensional brain-like readout consumed by the body controller.
-
-    These L2 values are engineering placeholders, not empirical LIF outputs.
-    L3 should replace this source with a lookup table derived from the brain model.
-    """
+    """Low-dimensional readout consumed by the body controller."""
 
     behavior_state: BehaviorState
     forward_drive: float
@@ -43,4 +39,4 @@ class BrainReadout:
     feeding_score: float
     mn9_rate_hz: float
     dust_clearance: float = 0.0
-    source: str = "rule_bridge_l2"
+    source: str = "shiu_full_pending"

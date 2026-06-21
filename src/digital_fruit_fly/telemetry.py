@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -109,92 +110,204 @@ def make_l4_embodied_plot(telemetry_rows: list[dict[str, Any]], plot_path: Path)
     plt.close(fig)
 
 
+def _brain_panel_values(row: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "time_s": float(row.get("time_s", 0.0)),
+        "behavior_state": str(row.get("behavior_state", "unknown")),
+        "backend": str(row.get("ipc_backend", row.get("readout_source", "unknown"))),
+        "mn9_rate_hz": float(row.get("mn9_rate_hz", row.get("l4_mn9_rate_hz", 0.0))),
+        "grooming_rate_hz": float(
+            row.get(
+                "ipc_grooming_rate_hz",
+                row.get("l4_grooming_rate_hz", row.get("grooming_score", 0.0)),
+            )
+        ),
+        "brain_wall_time_ms": float(
+            row.get("ipc_brain_wall_time_ms", row.get("l4_update_wall_time_ms", 0.0))
+        ),
+        "brain_window_s": float(
+            row.get("ipc_brain_window_s", row.get("l4_target_sync_interval_s", 0.0))
+        ),
+    }
+
+
+def _brain_point_cloud() -> tuple[list[float], list[float], list[str]]:
+    xs: list[float] = []
+    ys: list[float] = []
+    regions: list[str] = []
+    for side, center_x in (("left", -1.25), ("right", 1.25)):
+        for i in range(130):
+            angle = i * 2.399963229728653
+            radius = math.sqrt((i + 0.5) / 130.0)
+            xs.append(center_x + 0.78 * radius * math.cos(angle))
+            ys.append(0.04 + 0.58 * radius * math.sin(angle))
+            regions.append(side)
+    for i in range(120):
+        angle = i * 2.399963229728653
+        radius = math.sqrt((i + 0.5) / 120.0)
+        xs.append(0.0 + 0.95 * radius * math.cos(angle))
+        ys.append(-0.03 + 0.42 * radius * math.sin(angle))
+        regions.append("central")
+    return xs, ys, regions
+
+
+def _draw_l4_brain_panel(axis, row: dict[str, Any]) -> None:
+    values = _brain_panel_values(row)
+    xs, ys, regions = _brain_point_cloud()
+    mn9_level = _clip_for_plot(values["mn9_rate_hz"] / 100.0)
+    grooming_level = _clip_for_plot(values["grooming_rate_hz"] / 100.0)
+    colors = []
+    sizes = []
+    for region in regions:
+        if region in {"left", "right"}:
+            colors.append((0.18 + 0.75 * mn9_level, 0.24 + 0.62 * mn9_level, 0.30, 0.38 + 0.55 * mn9_level))
+            sizes.append(5.5 + 13.0 * mn9_level)
+        else:
+            colors.append((0.42 + 0.35 * grooming_level, 0.16, 0.50 + 0.46 * grooming_level, 0.36 + 0.58 * grooming_level))
+            sizes.append(4.5 + 15.0 * grooming_level)
+
+    axis.set_facecolor("black")
+    axis.scatter(xs, ys, s=sizes, c=colors, edgecolors="none")
+    axis.scatter(
+        [-0.42, 0.42],
+        [0.32, 0.32],
+        s=[80 + 210 * grooming_level, 80 + 210 * grooming_level],
+        c=[(0.95, 0.12, 0.95, 0.88), (0.95, 0.12, 0.95, 0.88)],
+        edgecolors="white",
+        linewidths=0.4,
+    )
+    axis.scatter(
+        [-1.25, 1.25],
+        [0.04, 0.04],
+        s=[120 + 280 * mn9_level, 120 + 280 * mn9_level],
+        c=[(1.0, 0.88, 0.34, 0.88), (1.0, 0.88, 0.34, 0.88)],
+        edgecolors="white",
+        linewidths=0.4,
+    )
+    axis.text(
+        -2.08,
+        -0.86,
+        f"behavior {values['behavior_state']}",
+        color="white",
+        fontsize=10,
+        ha="left",
+    )
+    axis.text(
+        -2.08,
+        -1.03,
+        f"backend {values['backend']}",
+        color="#cfcfcf",
+        fontsize=9,
+        ha="left",
+    )
+    axis.text(
+        0.15,
+        -0.86,
+        f"MN9 {values['mn9_rate_hz']:.1f} Hz",
+        color="#ffe681",
+        fontsize=10,
+        ha="left",
+    )
+    axis.text(
+        0.15,
+        -1.03,
+        f"grooming DN {values['grooming_rate_hz']:.1f} Hz",
+        color="#ffa6ff",
+        fontsize=9,
+        ha="left",
+    )
+    axis.text(
+        1.18,
+        -0.86,
+        f"window {values['brain_window_s'] * 1000.0:.1f} ms",
+        color="#cfcfcf",
+        fontsize=9,
+        ha="left",
+    )
+    axis.text(
+        1.18,
+        -1.03,
+        f"wall {values['brain_wall_time_ms']:.1f} ms",
+        color="#cfcfcf",
+        fontsize=9,
+        ha="left",
+    )
+    axis.set_xlim(-2.2, 2.2)
+    axis.set_ylim(-1.15, 1.02)
+    axis.set_xticks([])
+    axis.set_yticks([])
+    for spine in axis.spines.values():
+        spine.set_visible(False)
+
+
+def _clip_for_plot(value: float) -> float:
+    return max(0.0, min(1.0, value))
+
+
+def make_l4_brain_activity_panel_png(
+    telemetry_rows: list[dict[str, Any]],
+    output_path: Path,
+) -> bool:
+    """Write one dark brain-activity panel from the final L4 telemetry row."""
+    if not telemetry_rows:
+        return False
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import matplotlib.pyplot as plt
+    except ModuleNotFoundError:
+        _write_minimal_black_png(output_path)
+        return True
+
+    fig, axis = plt.subplots(figsize=(8, 4.5), facecolor="black")
+    _draw_l4_brain_panel(axis, telemetry_rows[-1])
+    fig.tight_layout(pad=0.08)
+    fig.savefig(output_path, dpi=160, facecolor="black")
+    plt.close(fig)
+    return True
+
+
+def _write_minimal_black_png(output_path: Path) -> None:
+    import struct
+    import zlib
+
+    def chunk(kind: bytes, payload: bytes) -> bytes:
+        return (
+            struct.pack(">I", len(payload))
+            + kind
+            + payload
+            + struct.pack(">I", zlib.crc32(kind + payload) & 0xFFFFFFFF)
+        )
+
+    width = height = 1
+    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
+    raw_rgb_scanline = b"\x00\x00\x00\x00"
+    png = (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", ihdr)
+        + chunk(b"IDAT", zlib.compress(raw_rgb_scanline))
+        + chunk(b"IEND", b"")
+    )
+    output_path.write_bytes(png)
+
+
 def _save_l4_brain_state_animation(
     telemetry_rows: list[dict[str, Any]],
     output_path: Path,
     writer,
 ) -> bool:
-    """Write an animation of the online brain state with a matplotlib writer."""
+    """Write an animation of the L4 brain activity panel with a matplotlib writer."""
     import matplotlib.animation as animation
     import matplotlib.pyplot as plt
 
     if not telemetry_rows:
         return False
 
-    time_s = [float(row["time_s"]) for row in telemetry_rows]
-    mn9_rate = [float(row["mn9_rate_hz"]) for row in telemetry_rows]
-    grooming_rate = [
-        float(row.get("l4_grooming_rate_hz", row["grooming_score"]))
-        for row in telemetry_rows
-    ]
-    dust = [float(row["dust_level"]) for row in telemetry_rows]
-    food = [float(row["food_cue"]) for row in telemetry_rows]
-    mn9_v = [float(row.get("l4_mn9_voltage_mV", -52.0)) for row in telemetry_rows]
-    grooming_v = [
-        float(row.get("l4_grooming_voltage_mV", -52.0)) for row in telemetry_rows
-    ]
-
-    fig, axes = plt.subplots(3, 1, figsize=(8, 6), sharex=True)
-    fig.suptitle("L4 online brain proxy state")
-
-    axes[0].set_ylabel("input")
-    axes[0].set_ylim(-0.05, 1.05)
-    food_line, = axes[0].plot([], [], label="food_cue")
-    dust_line, = axes[0].plot([], [], label="dust_level")
-    axes[0].legend(loc="upper right")
-
-    axes[1].set_ylabel("rate Hz")
-    axes[1].set_ylim(0.0, max(max(mn9_rate), max(grooming_rate), 1.0) * 1.15)
-    mn9_line, = axes[1].plot([], [], label="MN9-like")
-    grooming_line, = axes[1].plot([], [], label="grooming-like")
-    axes[1].legend(loc="upper right")
-
-    axes[2].set_ylabel("voltage mV")
-    axes[2].set_xlabel("simulation time (s)")
-    axes[2].set_ylim(-53.5, -42.0)
-    mn9_v_line, = axes[2].plot([], [], label="MN9 V")
-    grooming_v_line, = axes[2].plot([], [], label="grooming V")
-    state_text = axes[2].text(
-        0.01,
-        0.04,
-        "",
-        transform=axes[2].transAxes,
-        fontsize=9,
-        va="bottom",
-    )
-    axes[2].legend(loc="upper right")
-
-    for axis in axes:
-        axis.set_xlim(time_s[0], time_s[-1] if time_s[-1] > time_s[0] else time_s[0] + 1.0)
-        axis.grid(alpha=0.25)
+    fig, axis = plt.subplots(figsize=(8, 4.5), facecolor="black")
 
     def update(frame: int):
-        end = frame + 1
-        current = telemetry_rows[frame]
-        food_line.set_data(time_s[:end], food[:end])
-        dust_line.set_data(time_s[:end], dust[:end])
-        mn9_line.set_data(time_s[:end], mn9_rate[:end])
-        grooming_line.set_data(time_s[:end], grooming_rate[:end])
-        mn9_v_line.set_data(time_s[:end], mn9_v[:end])
-        grooming_v_line.set_data(time_s[:end], grooming_v[:end])
-        state_text.set_text(
-            "\n".join(
-                [
-                    f"behavior: {current['behavior_state']}",
-                    f"updated: {int(current.get('l4_brain_updated', 0))}",
-                    f"update ms: {float(current.get('l4_update_wall_time_ms', 0.0)):.3f}",
-                ]
-            )
-        )
-        return (
-            food_line,
-            dust_line,
-            mn9_line,
-            grooming_line,
-            mn9_v_line,
-            grooming_v_line,
-            state_text,
-        )
+        axis.clear()
+        _draw_l4_brain_panel(axis, telemetry_rows[frame])
+        return []
 
     try:
         output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -203,7 +316,7 @@ def _save_l4_brain_state_animation(
             update,
             frames=len(telemetry_rows),
             interval=100,
-            blit=True,
+            blit=False,
         )
         anim.save(output_path, writer=writer)
     except Exception:

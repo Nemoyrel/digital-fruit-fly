@@ -1,24 +1,34 @@
-"""Shared embodied FlyGym loop used by L2 and L3 demos."""
+"""Shared embodied FlyGym loop used by the L4 IPC demo."""
 
 from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Protocol
 
-from .brain_bridge import BrainBridge, readout_to_descending_signal
+from .brain_bridge import readout_to_descending_signal
 from .config import configure_local_caches
-from .flygym_body import FlyGymLocomotionBody, make_l2_scene_markers
-from .state import BehaviorState
+from .flygym_body import FlyGymLocomotionBody, make_scene_markers
+from .state import BehaviorState, BrainReadout, SensoryState
 from .telemetry import make_embodied_plot, write_csv, write_json
 from .virtual_environment import VirtualEnvironment
+
+
+class BodyBrainBridge(Protocol):
+    """Interface implemented by L4 brain/body bridges."""
+
+    behavior_state: BehaviorState
+    just_completed_grooming: bool
+
+    def step(self, sensory_state: SensoryState) -> BrainReadout:
+        """Return a body-facing readout for the current sensory state."""
 
 
 def run_embodied_loop(
     *,
     config: dict[str, Any],
     config_path: Path,
-    bridge: BrainBridge,
+    bridge: BodyBrainBridge,
     output_dir: Path,
     stem_prefix: str,
     level: str,
@@ -39,7 +49,7 @@ def run_embodied_loop(
     body = FlyGymLocomotionBody(
         arena_half_size_mm=float(config["scene"]["arena_half_size_mm"]),
         seed=int(config["run"]["seed"]),
-        scene_markers=make_l2_scene_markers(config["scene"]),
+        scene_markers=make_scene_markers(config["scene"]),
         camera_config=config.get("camera"),
     )
     if not no_video:

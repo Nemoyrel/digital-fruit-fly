@@ -1,4 +1,4 @@
-"""Reusable FlyGym body simulation wrapper for L1-L3 demos."""
+"""Reusable FlyGym body simulation wrapper for the L4 demo."""
 
 from __future__ import annotations
 
@@ -141,27 +141,27 @@ class FlyGymLocomotionBody:
         self.sim.close()
 
 
-def make_l2_scene_markers(scene_config: dict[str, Any]) -> list[SceneMarker]:
+def make_scene_markers(scene_config: dict[str, Any]) -> list[SceneMarker]:
     food_x, food_y = scene_config["food_position_mm"]
     food_radius = float(scene_config["food_contact_radius_mm"])
     cue_radius = float(scene_config["food_cue_radius_mm"])
     return [
         SceneMarker(
-            name="l2_food_marker",
+            name="l4_food_marker",
             geom_type="sphere",
             size=(0.26,),
             pos=(food_x, food_y, 0.26),
             rgba=(0.9, 0.1, 0.05, 1.0),
         ),
         SceneMarker(
-            name="l2_food_contact_radius",
+            name="l4_food_contact_radius",
             geom_type="cylinder",
             size=(food_radius, 0.01),
             pos=(food_x, food_y, 0.012),
             rgba=(0.9, 0.15, 0.05, 0.18),
         ),
         SceneMarker(
-            name="l2_food_cue_radius",
+            name="l4_food_cue_radius",
             geom_type="cylinder",
             size=(cue_radius, 0.006),
             pos=(food_x, food_y, 0.008),

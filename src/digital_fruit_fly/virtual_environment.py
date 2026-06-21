@@ -1,4 +1,4 @@
-"""Minimal 2D scene sensing for the L2 embodied loop."""
+"""Minimal 2D scene sensing for the L4 embodied loop."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ def _clip(value: float, low: float, high: float) -> float:
 
 @dataclass(frozen=True)
 class SceneConfig:
-    """Positions and thresholds for the L2 virtual scene."""
+    """Positions and thresholds for the L4 virtual scene."""
 
     arena_half_size_mm: float = 150.0
     food_position_mm: tuple[float, float] = (80.0, 25.0)

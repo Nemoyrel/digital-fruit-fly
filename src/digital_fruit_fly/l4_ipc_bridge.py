@@ -25,6 +25,7 @@ class IpcBrainBridge:
         self.last_backend = "not_connected"
         self.last_brain_wall_time_ms = 0.0
         self.last_error = ""
+        self.last_extra: dict[str, Any] = {}
         self.last_readout = BrainReadout(
             behavior_state=BehaviorState.FORAGING,
             forward_drive=0.65,
@@ -78,11 +79,13 @@ class IpcBrainBridge:
             self.last_backend = "timeout_cache"
             self.last_error = repr(exc)
             self.last_brain_wall_time_ms = 0.0
+            self.last_extra = {}
             return self.last_readout
 
         self.last_backend = response.backend
         self.last_error = ""
         self.last_brain_wall_time_ms = response.brain_wall_time_ms
+        self.last_extra = dict(response.extra)
         self.just_completed_grooming = bool(response.dust_clearance)
         self.last_readout = self._to_readout(response)
         self.behavior_state = self.last_readout.behavior_state
@@ -95,4 +98,11 @@ class IpcBrainBridge:
             "ipc_backend": self.last_backend,
             "ipc_brain_wall_time_ms": self.last_brain_wall_time_ms,
             "ipc_last_error": self.last_error,
+            "ipc_grooming_rate_hz": float(
+                self.last_extra.get("grooming_rate_hz", 0.0)
+            ),
+            "ipc_shiu_full_used": int(
+                bool(self.last_extra.get("shiu_full_used", False))
+            ),
+            "ipc_brain_window_s": float(self.last_extra.get("brain_window_s", 0.0)),
         }

@@ -19,6 +19,7 @@ from .telemetry import (
     make_l4_brain_state_gif,
     make_l4_brain_state_video,
     make_l4_embodied_plot,
+    write_json,
 )
 
 
@@ -105,18 +106,49 @@ def run_l4_ipc_embodied_demo(
             )
             if combined_metadata["combined"]:
                 combined_video_path = candidate_combined
+        wall_times = sorted(
+            float(row.get("ipc_brain_wall_time_ms", 0.0))
+            for row in rows
+            if float(row.get("ipc_brain_wall_time_ms", 0.0)) > 0.0
+        )
+        if wall_times:
+            mean_wall_ms = sum(wall_times) / len(wall_times)
+            p95_wall_ms = wall_times[int(round((len(wall_times) - 1) * 0.95))]
+            max_wall_ms = wall_times[-1]
+        else:
+            mean_wall_ms = p95_wall_ms = max_wall_ms = 0.0
+        benchmark_path = run_output_dir / f"{stem}_benchmark.json"
+        benchmark = {
+            "request_count": bridge.request_count,
+            "timeout_count": bridge.timeout_count,
+            "backend": bridge.last_backend,
+            "backends_seen": sorted(
+                {
+                    str(row.get("ipc_backend", "unknown"))
+                    for row in rows
+                    if row.get("ipc_backend") is not None
+                }
+            ),
+            "mean_brain_wall_time_ms": mean_wall_ms,
+            "p95_brain_wall_time_ms": p95_wall_ms,
+            "max_brain_wall_time_ms": max_wall_ms,
+            "combined_video": combined_metadata,
+        }
+        write_json(benchmark_path, benchmark)
         metadata["ipc_summary"] = {
             "request_count": bridge.request_count,
             "timeout_count": bridge.timeout_count,
             "backend": bridge.last_backend,
             "combine_video_requested": combine_video,
             "combined_video": combined_metadata,
+            "benchmark_json": str(benchmark_path),
         }
         return {
             "ipc_telemetry_plot_png": str(ipc_plot_path) if ipc_plot_path else None,
             "brain_state_video_mp4": str(brain_video_path) if brain_video_path else None,
             "brain_state_animation_gif": str(brain_gif_path) if brain_gif_path else None,
             "combined_video_mp4": str(combined_video_path) if combined_video_path else None,
+            "benchmark_json": str(benchmark_path),
         }
 
     try:
@@ -131,7 +163,7 @@ def run_l4_ipc_embodied_demo(
             notes=[
                 "FlyGym loop runs in flygym_env while brain worker is intended to run in brain_env.",
                 "IPC transport is this project's TCP JSON-lines bridge, not an Eon-disclosed protocol.",
-                "Worker backend records whether Shiu full model was attempted or proxy fallback was used.",
+                "Worker backend records full Shiu model startup, run timing, and failures.",
             ],
             sources=[
                 "https://eon.systems/updates/embodied-brain-emulation",

@@ -1,9 +1,0 @@
-input_kind,input_value,stimulus_hz,mn9_rate_hz,mn9_rate_std_hz,grooming_rate_hz,feeding_score,grooming_score,source
-sugar,0.0,0.0,0.0,0.0,0.0,0.0,0.0,baseline_no_sugar_engineering_anchor
-sugar,0.5,100.0,67.03333333333333,6.595368745482612,0.0,0.7187276626161544,0.0,philshiu_example:sugarR_100Hz
-sugar,1.0,150.0,93.26666666666667,3.1510139461590594,0.0,1.0,0.0,philshiu_example:sugarR
-mechanosensory_dust,0.0,0.0,0.0,0.0,0.0,0.0,0.0,brian2_lif_grooming_proxy
-mechanosensory_dust,0.25,37.5,0.0,0.0,35.6,0.0,0.3503937007874016,brian2_lif_grooming_proxy
-mechanosensory_dust,0.5,75.0,0.0,0.0,62.4,0.0,0.6141732283464567,brian2_lif_grooming_proxy
-mechanosensory_dust,0.75,112.5,0.0,0.0,82.0,0.0,0.8070866141732284,brian2_lif_grooming_proxy
-mechanosensory_dust,1.0,150.0,0.0,0.0,101.6,0.0,1.0,brian2_lif_grooming_proxy

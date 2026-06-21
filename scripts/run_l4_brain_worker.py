@@ -21,16 +21,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument(
         "--backend",
-        choices=["auto", "brian2_proxy", "shiu_full"],
-        default="auto",
+        choices=["auto", "shiu_full"],
+        default="shiu_full",
     )
     parser.add_argument("--once-smoke", action="store_true")
-    parser.add_argument("--max-startup-s", type=float, default=10.0)
+    parser.add_argument("--max-startup-s", type=float, default=0.0)
+    parser.add_argument("--brain-window-s", type=float, default=0.015)
     return parser.parse_args()
 
 
 def main() -> None:
     from digital_fruit_fly.brain_worker import (
+        BrainBackendUnavailable,
         BrainWorkerConfig,
         L4BrainWorkerServer,
         select_backend,
@@ -38,12 +40,47 @@ def main() -> None:
     )
 
     args = parse_args()
-    config = BrainWorkerConfig(max_startup_s=args.max_startup_s)
+    config = BrainWorkerConfig(
+        max_startup_s=args.max_startup_s,
+        brain_window_s=args.brain_window_s,
+    )
     if args.once_smoke:
-        print(json.dumps(smoke_response(args.backend, config), indent=2))
+        try:
+            print(json.dumps(smoke_response(args.backend, config), indent=2))
+        except BrainBackendUnavailable as exc:
+            print(
+                json.dumps(
+                    {
+                        "event": "brain_worker_failed",
+                        "backend": args.backend,
+                        "stage": exc.stage,
+                        "reason": exc.reason,
+                        "metadata": exc.metadata,
+                    },
+                    indent=2,
+                ),
+                file=sys.stderr,
+            )
+            raise SystemExit(2)
         return
 
-    selection = select_backend(args.backend, config)
+    try:
+        selection = select_backend(args.backend, config)
+    except BrainBackendUnavailable as exc:
+        print(
+            json.dumps(
+                {
+                    "event": "brain_worker_failed",
+                    "backend": args.backend,
+                    "stage": exc.stage,
+                    "reason": exc.reason,
+                    "metadata": exc.metadata,
+                },
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
     print(
         json.dumps(
             {

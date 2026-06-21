@@ -22,7 +22,7 @@
     "timeout_s": 0.05,
     "start_worker": false,
     "brain_env_python": "/opt/miniconda3/envs/brain_env/bin/python",
-    "backend": "auto"
+    "backend": "shiu_full"
   },
   "render": {
     "camera_res": [360, 480],

@@ -1,4 +1,12 @@
 import unittest
+from pathlib import Path
+import sys
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+SRC_DIR = PROJECT_ROOT / "src"
+if str(SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(SRC_DIR))
 
 from digital_fruit_fly.ipc_protocol import (
     BrainReadoutMessage,
@@ -33,12 +41,12 @@ class IpcProtocolTest(unittest.TestCase):
             feeding_score=0.95,
             mn9_rate_hz=88.0,
             dust_clearance=0.0,
-            source="brain_worker:brian2_proxy",
-            backend="brian2_proxy",
+            source="brain_worker:shiu_full",
+            backend="shiu_full",
             brain_wall_time_ms=1.5,
             brain_simulated_window_s=0.015,
             cache_hit=False,
-            extra={"mn9_voltage_mV": -48.0},
+            extra={"shiu_full_used": True},
         )
         decoded = decode_message(encode_message(msg))
         self.assertEqual(decoded, msg)
