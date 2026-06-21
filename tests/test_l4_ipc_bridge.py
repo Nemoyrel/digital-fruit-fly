@@ -32,6 +32,31 @@ def make_state(time_s=0.1):
 
 
 class IpcBrainBridgeTest(unittest.TestCase):
+    def test_exposes_behavior_state_for_embodied_loop(self):
+        client = FakeClient(
+            BrainReadoutMessage(
+                request_id=1,
+                behavior_state="grooming",
+                forward_drive=0.0,
+                turn_bias=0.0,
+                grooming_score=1.0,
+                feeding_score=0.0,
+                mn9_rate_hz=8.0,
+                dust_clearance=0.0,
+                source="brain_worker:brian2_proxy",
+                backend="brian2_proxy",
+                brain_wall_time_ms=1.0,
+                brain_simulated_window_s=0.015,
+                cache_hit=False,
+            )
+        )
+        bridge = IpcBrainBridge(client=client)
+
+        self.assertEqual(bridge.behavior_state, BehaviorState.FORAGING)
+        bridge.step(make_state())
+
+        self.assertEqual(bridge.behavior_state, BehaviorState.GROOMING)
+
     def test_successful_response_converts_to_readout(self):
         client = FakeClient(
             BrainReadoutMessage(

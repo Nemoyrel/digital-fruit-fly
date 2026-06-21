@@ -20,6 +20,7 @@ class IpcBrainBridge:
     def __post_init__(self) -> None:
         self.request_count = 0
         self.timeout_count = 0
+        self.behavior_state = BehaviorState.FORAGING
         self.just_completed_grooming = False
         self.last_backend = "not_connected"
         self.last_brain_wall_time_ms = 0.0
@@ -84,6 +85,7 @@ class IpcBrainBridge:
         self.last_brain_wall_time_ms = response.brain_wall_time_ms
         self.just_completed_grooming = bool(response.dust_clearance)
         self.last_readout = self._to_readout(response)
+        self.behavior_state = self.last_readout.behavior_state
         return self.last_readout
 
     def telemetry_fields(self) -> dict[str, float | int | str]:
