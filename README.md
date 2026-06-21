@@ -10,6 +10,7 @@
 - L2：规则版 `sensory_state -> brain_readout -> behavior_state -> action` 闭环可运行；
 - L3：离线脑读出查表已生成，并通过 `LookupBrainBridge` 接入 FlyGym 身体仿真；
 - L4：`level4-branch` 上新增了小型在线 LIF proxy 尝试、脑状态动画和实时 telemetry/benchmark 输出。
+- L4 IPC：`codex/l4-ipc-brain-worker` 上新增 `brain_env` Brian2 worker + `flygym_env` FlyGym 主循环的 TCP JSON-lines IPC 尝试。
 
 L3 的关键边界：
 
@@ -17,6 +18,7 @@ L3 的关键边界：
 - dust/grooming 行当前是小型 Brian2 LIF proxy，使用 Shiu 模型同风格的 LIF 常量，不是完整 connectome 运行；
 - 行为门控、turn/forward 映射和 FlyGym 控制是本项目自己的工程桥接。
 - L4 在线部分是小型 LIF-style proxy 和 timing benchmark，不是完整 Shiu connectome 在线运行。
+- L4 IPC 使用本项目自己的 TCP JSON-lines 协议；Eon 公开文章没有披露具体脑-身 IPC 协议。
 - L4/L2/L3 的场景感知现在不会在气味场外泄漏食物方向；`food_cue == 0` 时使用 seeded random search，进入 cue radius 后才使用趋化 `turn_bias`；L4 额外用 `search_turn_gain` 放大气味外搜索转向，避免视频里随机搜索过弱。
 
 ## 目录结构
@@ -62,6 +64,16 @@ conda activate flygym_env
 python scripts/run_l4_embodied_demo.py --duration 8 --log-every-steps 50
 ```
 
+运行 L4 IPC brain worker 尝试：
+
+```bash
+# Terminal 1
+/opt/miniconda3/envs/brain_env/bin/python scripts/run_l4_brain_worker.py --backend auto --host 127.0.0.1 --port 8765
+
+# Terminal 2
+/opt/miniconda3/envs/flygym_env/bin/python scripts/run_l4_ipc_embodied_demo.py --duration 8 --combine-video
+```
+
 无视频快速检查：
 
 ```bash
@@ -98,6 +110,18 @@ L4 demo 运行后会在 `outputs/l4_embodied_loop/` 下生成：
 - `*.csv` / `*_metadata.json`：逐帧 telemetry 和复现实验 metadata。
 
 详见 `docs/l4_online_lif.md`。
+
+## L4 IPC 产物
+
+L4 IPC demo 运行后会在 `outputs/l4_ipc_embodied_loop/` 下生成：
+
+- FlyGym 身体视频；
+- 脑状态 MP4 或 GIF fallback；
+- 左侧身体、右侧脑状态的 combined video，如果本机视频工具可用；
+- IPC telemetry plot，包含 worker latency、backend、timeout/cache 状态；
+- CSV 和 metadata JSON。
+
+详见 `docs/l4_ipc_brain_worker.md`。
 
 ## 上游依赖
 
