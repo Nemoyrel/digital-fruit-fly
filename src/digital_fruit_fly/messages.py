@@ -1,4 +1,8 @@
-"""JSON-lines messages for the L4 brain/body IPC bridge."""
+"""脑/身体 IPC 桥的 JSON-lines 消息（纯标准库）。
+
+传输格式是本项目自行实现的 TCP JSON-lines，并非 Eon 披露过的协议。
+每条消息序列化为一行 UTF-8 JSON（以 ``\\n`` 结尾）。
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ from typing import Any
 
 @dataclass(frozen=True)
 class SensoryStateMessage:
-    """Serializable sensory-state request sent from body loop to brain worker."""
+    """身体 loop -> 脑 worker 的感觉状态请求。"""
 
     request_id: int
     time_s: float
@@ -24,7 +28,10 @@ class SensoryStateMessage:
 
 @dataclass(frozen=True)
 class BrainReadoutMessage:
-    """Serializable readout response sent from brain worker to body loop."""
+    """脑 worker -> 身体 loop 的读出响应。
+
+    ``neuron_activity`` 为采样子集的逐神经元脉冲计数（固定长度，用于脑活动面板）。
+    """
 
     request_id: int
     behavior_state: str
@@ -38,18 +45,20 @@ class BrainReadoutMessage:
     backend: str
     brain_wall_time_ms: float
     brain_simulated_window_s: float
-    cache_hit: bool
+    neuron_activity: list[int] = field(default_factory=list)
+    active_neuron_count: int = 0
+    total_neuron_count: int = 0
     extra: dict[str, Any] = field(default_factory=dict)
     type: str = "brain_readout"
 
 
 def encode_message(message: SensoryStateMessage | BrainReadoutMessage) -> bytes:
-    """Encode one message as newline-delimited UTF-8 JSON."""
+    """把一条消息编码为以换行结尾的 UTF-8 JSON 字节串。"""
     return (json.dumps(asdict(message), sort_keys=True) + "\n").encode("utf-8")
 
 
 def decode_message(raw: bytes | str) -> SensoryStateMessage | BrainReadoutMessage:
-    """Decode one newline-delimited JSON message."""
+    """解码一行 JSON-lines 消息。"""
     text = raw.decode("utf-8") if isinstance(raw, bytes) else raw
     payload = json.loads(text.strip())
     msg_type = payload.pop("type", None)
@@ -57,4 +66,4 @@ def decode_message(raw: bytes | str) -> SensoryStateMessage | BrainReadoutMessag
         return SensoryStateMessage(**payload)
     if msg_type == "brain_readout":
         return BrainReadoutMessage(**payload)
-    raise ValueError(f"Unknown IPC message type: {msg_type!r}")
+    raise ValueError(f"未知的 IPC 消息类型: {msg_type!r}")

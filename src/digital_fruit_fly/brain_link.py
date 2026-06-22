@@ -1,4 +1,10 @@
-"""FlyGym-side bridge that talks to the L4 brain worker over IPC."""
+"""身体侧的脑桥：通过 IPC 与脑 worker 通信，并做节流 + 读出缓存。
+
+实现 ``embodied_loop`` 所需的 ``BodyBrainBridge`` 协议：
+``step(sensory_state) -> BrainReadout``、``behavior_state``、``just_completed_grooming``、
+``telemetry_fields()``。脑窗仿真较慢，因此按 ``brain_sync_interval_s`` 节流：
+两次真实请求之间复用上一次读出（含其逐神经元活动向量，供面板持续显示）。
+"""
 
 from __future__ import annotations
 
@@ -7,16 +13,16 @@ import socket
 from typing import Any
 
 from .ipc_client import TcpJsonlClient
-from .ipc_protocol import BrainReadoutMessage, SensoryStateMessage
+from .messages import BrainReadoutMessage, SensoryStateMessage
 from .state import BehaviorState, BrainReadout, SensoryState
 
 
 @dataclass
 class IpcBrainBridge:
-    """BrainBridge implementation backed by a TCP brain worker."""
+    """由 TCP 脑 worker 支撑的脑桥。"""
 
     client: Any
-    brain_sync_interval_s: float = 0.5
+    brain_sync_interval_s: float = 0.15
 
     def __post_init__(self) -> None:
         self.step_count = 0
@@ -33,11 +39,11 @@ class IpcBrainBridge:
         self.last_extra: dict[str, Any] = {}
         self.last_readout = BrainReadout(
             behavior_state=BehaviorState.FORAGING,
-            forward_drive=0.65,
+            forward_drive=0.7,
             turn_bias=0.0,
             grooming_score=0.0,
             feeding_score=0.0,
-            mn9_rate_hz=5.0,
+            mn9_rate_hz=0.0,
             source="ipc_initial_cache",
         )
 
@@ -50,7 +56,7 @@ class IpcBrainBridge:
         )
         return cls(
             client=client,
-            brain_sync_interval_s=float(ipc_config.get("brain_sync_interval_s", 0.5)),
+            brain_sync_interval_s=float(ipc_config.get("brain_sync_interval_s", 0.15)),
         )
 
     def _make_message(self, sensory_state: SensoryState) -> SensoryStateMessage:
@@ -75,6 +81,9 @@ class IpcBrainBridge:
             mn9_rate_hz=response.mn9_rate_hz,
             dust_clearance=response.dust_clearance,
             source=response.source,
+            neuron_activity=tuple(response.neuron_activity),
+            active_neuron_count=response.active_neuron_count,
+            total_neuron_count=response.total_neuron_count,
         )
 
     def _should_use_cached_readout(self, sensory_state: SensoryState) -> bool:
@@ -105,7 +114,6 @@ class IpcBrainBridge:
         self.request_count += 1
         self.last_request_time_s = sensory_state.time_s
         self.last_cache_hit = False
-        self.just_completed_grooming = False
         try:
             response = self.client.request(self._make_message(sensory_state))
         except (OSError, TimeoutError, socket.timeout) as exc:
@@ -113,7 +121,6 @@ class IpcBrainBridge:
             self.last_backend = "timeout_cache"
             self.last_error = repr(exc)
             self.last_brain_wall_time_ms = 0.0
-            self.last_extra = {}
             return self.last_readout
 
         self.last_backend = response.backend
@@ -132,20 +139,11 @@ class IpcBrainBridge:
             "ipc_timeout_count": self.timeout_count,
             "ipc_cached_step_count": self.cached_step_count,
             "ipc_cache_hit": int(self.last_cache_hit),
-            "ipc_brain_sync_interval_s": self.brain_sync_interval_s,
-            "ipc_last_request_time_s": (
-                -1.0
-                if self.last_request_time_s is None
-                else self.last_request_time_s
-            ),
             "ipc_backend": self.last_backend,
             "ipc_brain_wall_time_ms": self.last_brain_wall_time_ms,
             "ipc_last_error": self.last_error,
-            "ipc_grooming_rate_hz": float(
-                self.last_extra.get("grooming_rate_hz", 0.0)
-            ),
-            "ipc_shiu_full_used": int(
-                bool(self.last_extra.get("shiu_full_used", False))
-            ),
+            "ipc_grooming_rate_hz": float(self.last_extra.get("grooming_rate_hz", 0.0)),
+            "ipc_active_neuron_count": int(self.last_readout.active_neuron_count),
+            "ipc_total_neuron_count": int(self.last_readout.total_neuron_count),
             "ipc_brain_window_s": float(self.last_extra.get("brain_window_s", 0.0)),
         }
