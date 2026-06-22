@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/opt/miniconda3/envs/flygym_env/bin/python -m unittest discover -s tests -t tests)"
+    ]
+  }
+}
