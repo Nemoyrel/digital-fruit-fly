@@ -93,7 +93,7 @@ class FakeShiuModule:
 
 
 class BrainWorkerBackendTest(unittest.TestCase):
-    def test_shiu_full_backend_calls_create_model_and_runs_network(self):
+    def test_shiu_full_backend_builds_reusable_inputs_and_runs_network(self):
         module = FakeShiuModule()
         config = BrainWorkerConfig(
             project_root=PROJECT_ROOT,
@@ -120,13 +120,39 @@ class BrainWorkerBackendTest(unittest.TestCase):
         response = backend.handle(make_msg(0.1, food_cue=1.0, dust_level=0.5))
 
         self.assertEqual(len(module.create_model_calls), 1)
-        self.assertEqual(module.poi_calls[0][0], [0])
-        self.assertEqual(module.poi_calls[0][1], [1])
+        self.assertEqual(module.poi_calls, [])
+        self.assertEqual(backend.sugar_input_indices, [0])
+        self.assertEqual(backend.jon_input_indices, [1])
+        self.assertEqual(backend.reusable_input_update_count, 1)
         self.assertEqual(response.backend, "shiu_full")
         self.assertEqual(response.source, "brain_worker:shiu_full")
         self.assertGreater(response.mn9_rate_hz, 0.0)
         self.assertGreater(response.extra["grooming_rate_hz"], 0.0)
+        self.assertEqual(response.extra["reusable_input_updates"], 1)
         self.assertTrue(response.extra["shiu_full_used"])
+
+    def test_shiu_full_backend_reuses_inputs_across_multiple_requests(self):
+        module = FakeShiuModule()
+        backend = ShiuFullBackend(
+            BrainWorkerConfig(
+                project_root=PROJECT_ROOT,
+                sugar_grn_ids=(10,),
+                jon_grn_ids=(11,),
+                mn9_flywire_id=12,
+                grooming_readout_ids=(13,),
+            ),
+            shiu_module=module,
+            network_factory=FakeNetwork,
+            flywire_to_index={10: 0, 11: 1, 12: 2, 13: 3},
+        )
+
+        backend.handle(make_msg(0.1, food_cue=1.0, dust_level=0.25))
+        backend.handle(make_msg(0.2, food_cue=0.5, dust_level=0.5))
+
+        self.assertEqual(module.poi_calls, [])
+        self.assertEqual(backend.reusable_input_update_count, 2)
+        self.assertEqual(backend.request_count, 2)
+        self.assertEqual(len(backend.net.run_calls), 2)
 
     def test_shiu_full_backend_failure_does_not_return_success(self):
         class BrokenModule(FakeShiuModule):

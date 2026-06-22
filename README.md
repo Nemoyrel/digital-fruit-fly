@@ -9,6 +9,8 @@
 - 仅保留 L4 IPC 工作流。
 - 正式 brain backend 只有 `shiu_full`。
 - `shiu_full` 必须调用 `external/drosophila_brain_model/model.py:create_model()` 并运行 Brian2 `Network` window。
+- `shiu_full` 启动时一次性建立可复用 sugar/JON Poisson 输入；每次请求只更新输入 rate，不重新创建 Brian2 输入对象。
+- FlyGym 侧按 `configs/l4_ipc_embodied_loop.json` 中的 `ipc.brain_sync_interval_s` 低频请求脑模型，中间身体步复用最近一次脑读出。
 - 不再保留旧阶段脚本、lookup 表、规则桥或替代 backend 作为演示路径。
 - 汇报前可以长时间预跑；如果全量脑模型失败，输出失败 metadata，而不是 fallback 成功。
 

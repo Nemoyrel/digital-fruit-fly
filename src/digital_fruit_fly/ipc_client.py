@@ -15,7 +15,7 @@ from .ipc_protocol import (
 class TcpJsonlClient:
     """Small one-request-per-connection TCP client."""
 
-    def __init__(self, *, host: str, port: int, timeout_s: float = 0.05) -> None:
+    def __init__(self, *, host: str, port: int, timeout_s: float = 600.0) -> None:
         self.host = host
         self.port = int(port)
         self.timeout_s = float(timeout_s)

@@ -104,7 +104,7 @@ The backend imports upstream `model.py`, builds flywire-to-Brian index mapping, 
 
 - [x] **Step 4: Implement request handling**
 
-Each request restores the baseline, builds sensory Poisson inputs, runs one configured brain window, computes MN9 and grooming/DN rates, and returns a `BrainReadoutMessage` with `backend="shiu_full"`.
+Startup builds reusable sensory input sources once. Each request restores the baseline, updates sugar/JON input rates, runs one configured brain window, computes MN9 and grooming/DN rates, and returns a `BrainReadoutMessage` with `backend="shiu_full"`.
 
 - [x] **Step 5: Run worker tests**
 

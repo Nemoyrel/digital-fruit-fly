@@ -27,6 +27,24 @@ class FakeClient:
         return self.response
 
 
+def make_response(request_id=1, behavior_state="feeding"):
+    return BrainReadoutMessage(
+        request_id=request_id,
+        behavior_state=behavior_state,
+        forward_drive=0.0,
+        turn_bias=0.0,
+        grooming_score=0.0,
+        feeding_score=1.0,
+        mn9_rate_hz=90.0,
+        dust_clearance=0.0,
+        source="brain_worker:shiu_full",
+        backend="shiu_full",
+        brain_wall_time_ms=1.0,
+        brain_simulated_window_s=0.015,
+        cache_hit=False,
+    )
+
+
 def make_state(time_s=0.1):
     return SensoryState(
         time_s=time_s,
@@ -66,23 +84,7 @@ class IpcBrainBridgeTest(unittest.TestCase):
         self.assertEqual(bridge.behavior_state, BehaviorState.GROOMING)
 
     def test_successful_response_converts_to_readout(self):
-        client = FakeClient(
-            BrainReadoutMessage(
-                request_id=1,
-                behavior_state="feeding",
-                forward_drive=0.0,
-                turn_bias=0.0,
-                grooming_score=0.0,
-                feeding_score=1.0,
-                mn9_rate_hz=90.0,
-                dust_clearance=0.0,
-                source="brain_worker:shiu_full",
-                backend="shiu_full",
-                brain_wall_time_ms=1.0,
-                brain_simulated_window_s=0.015,
-                cache_hit=False,
-            )
-        )
+        client = FakeClient(make_response())
         bridge = IpcBrainBridge(client=client)
 
         readout = bridge.step(make_state())
@@ -102,6 +104,43 @@ class IpcBrainBridgeTest(unittest.TestCase):
         self.assertEqual(readout, previous)
         self.assertEqual(bridge.timeout_count, 1)
 
+    def test_reuses_cached_readout_between_brain_sync_intervals(self):
+        client = FakeClient(make_response())
+        bridge = IpcBrainBridge(client=client, brain_sync_interval_s=0.5)
+
+        first = bridge.step(make_state(time_s=0.0))
+        second = bridge.step(make_state(time_s=0.1))
+        cached_fields = bridge.telemetry_fields()
+        third = bridge.step(make_state(time_s=0.5))
+
+        self.assertIs(second, first)
+        self.assertEqual(third.behavior_state, BehaviorState.FEEDING)
+        self.assertEqual(len(client.requests), 2)
+        self.assertEqual(bridge.request_count, 2)
+        self.assertEqual(bridge.step_count, 3)
+        self.assertEqual(bridge.cached_step_count, 1)
+        self.assertEqual(bridge.last_backend, "shiu_full")
+        self.assertEqual(cached_fields["ipc_cache_hit"], 1)
+        self.assertEqual(cached_fields["ipc_backend"], "shiu_full")
+        self.assertEqual(bridge.telemetry_fields()["ipc_cache_hit"], 0)
+
+    def test_from_config_reads_brain_sync_interval(self):
+        bridge = IpcBrainBridge.from_config(
+            {
+                "host": "127.0.0.1",
+                "port": 8765,
+                "timeout_s": 600.0,
+                "brain_sync_interval_s": 0.75,
+            }
+        )
+
+        self.assertEqual(bridge.brain_sync_interval_s, 0.75)
+
+    def test_from_config_default_timeout_is_full_model_friendly(self):
+        bridge = IpcBrainBridge.from_config({})
+
+        self.assertGreaterEqual(bridge.client.timeout_s, 60.0)
+
     def test_telemetry_fields_include_ipc_status(self):
         bridge = IpcBrainBridge(
             client=FakeClient(exc=socket.timeout("slow worker")),
@@ -111,7 +150,10 @@ class IpcBrainBridgeTest(unittest.TestCase):
         fields = bridge.telemetry_fields()
 
         self.assertEqual(fields["ipc_request_count"], 1)
+        self.assertEqual(fields["ipc_step_count"], 1)
         self.assertEqual(fields["ipc_timeout_count"], 1)
+        self.assertEqual(fields["ipc_cached_step_count"], 0)
+        self.assertEqual(fields["ipc_cache_hit"], 0)
         self.assertEqual(fields["ipc_backend"], "timeout_cache")
         self.assertIn("ipc_brain_wall_time_ms", fields)
 

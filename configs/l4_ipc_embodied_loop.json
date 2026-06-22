@@ -6,31 +6,32 @@
     "log_every_steps": 50
   },
   "scene": {
-    "arena_half_size_mm": 80.0,
-    "food_position_mm": [6.0, 2.0],
+    "arena_half_size_mm": 120.0,
+    "food_position_mm": [50.0, 25.0],
     "food_cue_radius_mm": 18.0,
     "food_contact_radius_mm": 1.25,
     "dust_accumulation_rate_per_s": 0.16,
     "dust_threshold": 1.0,
-    "search_seed": 0,
+    "search_seed": 11,
     "search_turn_interval_s": 0.45,
     "search_turn_strength": 0.45
   },
   "ipc": {
     "host": "127.0.0.1",
     "port": 8765,
-    "timeout_s": 0.05,
+    "timeout_s": 600.0,
+    "brain_sync_interval_s": 0.5,
     "start_worker": false,
     "brain_env_python": "/opt/miniconda3/envs/brain_env/bin/python",
     "backend": "shiu_full"
   },
   "render": {
-    "camera_res": [360, 480],
+    "camera_res": [368, 480],
     "output_fps": 30,
     "playback_speed": 1.0
   },
   "camera": {
-    "pos_offset": [0, -14, 11],
-    "fovy": 48.0
+    "pos_offset": [0, -35, 28],
+    "fovy": 60.0
   }
 }

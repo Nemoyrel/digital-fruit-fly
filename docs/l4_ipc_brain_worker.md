@@ -8,7 +8,7 @@ The two processes exchange `sensory_state -> brain_readout` over this project's 
 
 The production backend is `shiu_full`.
 
-`shiu_full` imports `external/drosophila_brain_model/model.py`, calls `create_model()`, constructs a Brian2 `Network`, injects request-specific sugar/JON Poisson inputs, runs one configured brain window, and reads out configured FlyWire IDs:
+`shiu_full` imports `external/drosophila_brain_model/model.py`, calls `create_model()`, constructs a Brian2 `Network`, creates reusable sugar/JON Poisson input sources once during startup, updates their rates for each request, runs one configured brain window, and reads out configured FlyWire IDs:
 
 - MN9: `720575940660219265`
 - grooming/mechanosensory readouts: DN1/DN2/aBN IDs used in the Shiu figure 5 workflow
@@ -47,6 +47,8 @@ The demo writes to `outputs/l4_ipc_embodied_loop/`:
 - telemetry CSV with `ipc_*` fields;
 - benchmark JSON with worker latency and combined-video status;
 - metadata JSON with config, events, notes, sources, and output paths.
+
+The FlyGym side should not call the full brain model on every physics step. It uses `ipc.brain_sync_interval_s` from `configs/l4_ipc_embodied_loop.json`; intermediate body steps reuse the most recent brain readout and mark telemetry with `ipc_cache_hit`.
 
 ## Interpretation
 

@@ -212,6 +212,22 @@ class BrainBackendUnavailable(RuntimeError):
         self.metadata = metadata or {}
 
 
+class _InjectedReusableInputGroup:
+    """Small injected-test stand-in for Brian2 input groups."""
+
+    def __init__(self, n_inputs: int) -> None:
+        self.n_inputs = n_inputs
+        self.rate: list[float] = [0.0 for _ in range(n_inputs)]
+
+
+class _InjectedReusableInputSynapses:
+    """Small injected-test stand-in for Brian2 input synapses."""
+
+    def __init__(self, source_indices: list[int], target_indices: list[int]) -> None:
+        self.source_indices = list(source_indices)
+        self.target_indices = list(target_indices)
+
+
 @dataclass(frozen=True)
 class BrainWorkerConfig:
     """Runtime configuration for the L4 full Shiu brain worker."""
@@ -305,6 +321,11 @@ class ShiuFullBackend:
         self.network_factory = network_factory
         self.flywire_to_index = flywire_to_index
         self.startup_wall_time_s = 0.0
+        self.sugar_input_indices: list[int] = []
+        self.jon_input_indices: list[int] = []
+        self.reusable_input_objects: tuple[Any, ...] = ()
+        self.reusable_input_group: Any | None = None
+        self.reusable_input_update_count = 0
         self._startup()
 
     def _fail(self, stage: str, reason: str) -> None:
@@ -340,7 +361,15 @@ class ShiuFullBackend:
                 self.path_con,
                 self.params,
             )
-            self.net = self.network_factory(self.neu, self.syn, self.spk_mon)
+            self.sugar_input_indices = self._indices(self.config.sugar_grn_ids)
+            self.jon_input_indices = self._indices(self.config.jon_grn_ids)
+            self.reusable_input_objects = self._build_reusable_input_objects()
+            self.net = self.network_factory(
+                self.neu,
+                self.syn,
+                self.spk_mon,
+                *self.reusable_input_objects,
+            )
             self.net.store("baseline")
         except BrainBackendUnavailable:
             raise
@@ -430,6 +459,62 @@ class ShiuFullBackend:
             self._fail("flywire_mapping", f"no configured IDs found in model: {flywire_ids}")
         return indices
 
+    def _build_reusable_input_objects(self) -> tuple[Any, ...]:
+        target_indices = self.sugar_input_indices + self.jon_input_indices
+        source_indices = list(range(len(target_indices)))
+        if self._injected:
+            self.reusable_input_group = _InjectedReusableInputGroup(len(target_indices))
+            return (
+                self.reusable_input_group,
+                _InjectedReusableInputSynapses(source_indices, target_indices),
+            )
+
+        try:
+            from brian2 import Hz, NeuronGroup, Synapses, ms
+        except Exception as exc:
+            self._fail("import_brian2_reusable_inputs", repr(exc))
+
+        input_group = NeuronGroup(
+            len(target_indices),
+            "rate : Hz",
+            threshold="rand() < rate * dt",
+            name="l4_reusable_poisson_input*",
+        )
+        input_group.rate = [0.0 for _ in target_indices] * Hz
+        input_synapses = Synapses(
+            input_group,
+            self.neu,
+            "w : volt",
+            on_pre="v_post += w",
+            name="l4_reusable_poisson_synapses*",
+        )
+        input_synapses.connect(i=source_indices, j=target_indices)
+        input_synapses.w = self.params["w_syn"] * self.params["f_poi"]
+        for brian_index in target_indices:
+            self.neu[brian_index].rfc = 0 * ms
+
+        self.reusable_input_group = input_group
+        return input_group, input_synapses
+
+    def _set_reusable_input_rates(
+        self,
+        *,
+        food_rate_hz: float,
+        dust_rate_hz: float,
+    ) -> None:
+        rates = (
+            [food_rate_hz for _ in self.sugar_input_indices]
+            + [dust_rate_hz for _ in self.jon_input_indices]
+        )
+        if self._injected:
+            assert self.reusable_input_group is not None
+            self.reusable_input_group.rate = rates
+        else:
+            hz = self._hz_unit()
+            assert self.reusable_input_group is not None
+            self.reusable_input_group.rate = rates * hz
+        self.reusable_input_update_count += 1
+
     def _rate_for_ids(self, spike_trains: dict[Any, Any], flywire_ids: tuple[int, ...]) -> float:
         assert self.flywire_to_index is not None
         rates = []
@@ -444,21 +529,13 @@ class ShiuFullBackend:
         return float(sum(rates) / len(rates))
 
     def _run_full_window(self, message: SensoryStateMessage) -> tuple[float, float, dict[str, float]]:
-        assert self.shiu_module is not None
         self.net.restore("baseline")
-        params = dict(self.params)
-        hz = self._hz_unit()
-        params["r_poi"] = self.config.food_max_rate_hz * message.food_cue * hz
-        params["r_poi2"] = self.config.dust_max_rate_hz * message.dust_level * hz
-        exc = self._indices(self.config.sugar_grn_ids)
-        exc2 = self._indices(self.config.jon_grn_ids)
-        poisson_inputs, self.neu = self.shiu_module.poi(self.neu, exc, exc2, params)
-        self.net.add(*poisson_inputs)
-        try:
-            self.net.run(params["t_run"])
-            spike_trains = self.spk_mon.spike_trains()
-        finally:
-            self.net.remove(*poisson_inputs)
+        self._set_reusable_input_rates(
+            food_rate_hz=self.config.food_max_rate_hz * message.food_cue,
+            dust_rate_hz=self.config.dust_max_rate_hz * message.dust_level,
+        )
+        self.net.run(self.params["t_run"])
+        spike_trains = self.spk_mon.spike_trains()
 
         mn9_rate = self._rate_for_ids(spike_trains, (self.config.mn9_flywire_id,))
         grooming_rate = self._rate_for_ids(spike_trains, self.config.grooming_readout_ids)
@@ -565,6 +642,10 @@ class ShiuFullBackend:
                 "grooming_rate_hz": grooming_rate,
                 "target_rates_hz": target_rates,
                 "request_count": self.request_count,
+                "reusable_input_updates": self.reusable_input_update_count,
+                "reusable_input_count": len(
+                    self.sugar_input_indices + self.jon_input_indices
+                ),
                 "brain_window_s": self.config.brain_window_s,
                 "shiu_full_attempted": True,
                 "shiu_full_used": True,
@@ -629,7 +710,11 @@ class L4BrainWorkerServer:
                     request = decode_message(raw)
                     if not isinstance(request, SensoryStateMessage):
                         continue
-                    conn.sendall(encode_message(self.backend.handle(request)))
+                    response = self.backend.handle(request)
+                    try:
+                        conn.sendall(encode_message(response))
+                    except (BrokenPipeError, ConnectionResetError, OSError):
+                        continue
 
     def serve_background(self) -> threading.Thread:
         self._thread = threading.Thread(target=self.serve_forever, daemon=True)
