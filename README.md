@@ -5,10 +5,7 @@
 [Shiu et al.（Nature 2024）](https://www.nature.com/articles/s41586-024-07763-9) 公开的
 [Brian2 全连接组**脑模型**](https://github.com/philshiu/Drosophila_brain_model) 耦合起来，
 作为两个进程运行，通过 TCP JSON-lines 交换 `感觉状态 → 脑读出`，
-最终产出**左身体、右脑活动**并排的实时汇报视频。
-
-最终视频形如：左侧为果蝇在有界场地中觅食/梳理/进食的实时画面，
-右侧为脑模型逐神经元活动的“brain emulation”面板。
+最终产出**左身体、右脑活动**并排的实时视频。
 
 ## 行为叙事
 
@@ -78,8 +75,7 @@ git clone https://github.com/philshiu/Drosophila_brain_model external/drosophila
     --backend shiu_full --once-smoke
 ```
 
-构建后端、对一条合成请求返回一次响应后退出。任何失败时打印 `brain_worker_failed` JSON 并以非零码退出
-（绝不用兜底输出包装成成功）。
+构建后端、对一条合成请求返回一次响应后退出。任何失败时打印 `brain_worker_failed` JSON 并以非零码退出。
 
 ## 测试
 
@@ -99,13 +95,12 @@ git clone https://github.com/philshiu/Drosophila_brain_model external/drosophila
 - `*_benchmark.json` —— IPC 请求数、超时数、脑窗 wall-time 统计。
 - `*_metadata.json` —— 完整配置、事件时间、行为计数、边界声明、来源。
 
-## 边界（务必声明）
+## 边界
 
 - 神经动力学来自 **Shiu et al. 公开 Brian2 模型**。
 - 感觉编码、readout→身体/驱动的映射、TCP IPC、脑活动面板的**点云布局**都是**本项目自己的工程桥接**。
 - 脑面板的神经元**空间坐标在公开数据中并不可得**（completeness 表只有 FlyWire ID 与 Completed 两列），
   因此布局是**确定性合成、示意性的**脑形；但每个点的**亮度来自脑模型真实计算出的脉冲计数**（127400 神经元按相邻分箱求和成 4000 个可视化点）。
-- 这不是「果蝇脑上传」，也不是对 Eon 未公开内部实现的复现；Eon 的文章没有披露其 IPC 协议。
 
 ## 参考
 
