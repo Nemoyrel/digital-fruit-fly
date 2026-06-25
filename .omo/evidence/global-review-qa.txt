@@ -1,0 +1,131 @@
+Global review lane 2 - Hands-on QA execution
+Verdict: PASS
+
+Scope
+- Reviewed final state for .omo/plans/eon-embodied-fly.md.
+- Did not edit product files, the plan, Boulder, or the ledger.
+- Wrote QA outputs only under outputs/review/global-qa plus this evidence file.
+- No persistent temp files were created; subprocess tempdirs used by unittest were cleaned by the tests.
+
+Commands run
+1. python3 scripts/run_demo.py --config configs/eon_demo.yaml --output outputs/review/global-qa/eon_demo --duration-sec 60 --seed 1
+   Exit code: 1
+   Expected blocker path: yes.
+   Parsed artifact: outputs/review/global-qa/eon_demo/failure_manifest.json
+   Facts:
+   - status: failed
+   - error_code: p0_body_process_timeout
+   - error: body subprocess timed out while connected to brain
+   - mode: separate_processes
+   - duration_sec: 60.0
+   - requested_ticks: 4000
+   - children_alive_after_cleanup: []
+   - brain subprocess: status ok, returncode 0, cleanup already_exited
+   - body subprocess: status timeout, returncode -15, cleanup completed, pid null
+   - summary.json: absent
+   - video success artifacts: absent
+   - partial logs present: events.jsonl, control.jsonl, arena.jsonl, trajectory.jsonl, brain/rates.csv, logs/brain_server.jsonl
+   - line counts: control.jsonl 4000, arena.jsonl 4000, trajectory.jsonl 4000, brain/rates.csv 20001, events.jsonl 4
+
+2. PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=src python3 -m unittest tests.test_demo_runner tests.test_behavior_scenario tests.test_bridge_replay
+   Exit code: 0
+   Result: Ran 9 tests in 16.097s, OK.
+   Coverage observed:
+   - default demo smoke accepts only real subprocess success or documented P0 blocker
+   - fixture demo writes replay-verifiable artifacts and replaces stale fly_demo.mp4
+   - killed-brain failure mode writes failure_manifest.json and terminates body
+   - ordered Eon behavior scenario is verified by replay
+   - missing grooming/dust behavior fails instead of passing stale output
+   - mirrored food bearing changes proboscis target sign
+   - bridge replay accepts complete fixture output and rejects missing/reordered frames
+
+3. PYTHONPATH=src python3 scripts/smoke_bridge.py --config configs/eon_demo.yaml --ticks 720 --output outputs/review/global-qa/bridge_behavior
+   Exit code: 0
+   Parsed artifacts:
+   - outputs/review/global-qa/bridge_behavior/frames.jsonl
+   - outputs/review/global-qa/bridge_behavior/summary.json
+   Facts:
+   - status: ok
+   - tick_ms: 15
+   - ticks: 720
+   - frame_count: 2160
+   - events_per_tick: sensory_frame, brain_frame, control_frame
+
+4. PYTHONPATH=src python3 scripts/replay_run.py --input outputs/review/global-qa/bridge_behavior --verify-behavior configs/eon_demo.yaml
+   Exit code: 0
+   Parsed artifact: outputs/review/global-qa/bridge_behavior/behavior_summary.json
+   Facts:
+   - status: ok
+   - ordered_events:
+     search_started, sugar_cue_acquired, food_contact, feeding_started, proboscis_extended,
+     dust_threshold_crossed, grooming_started, face_grooming_sweep_detected, dust_clean,
+     locomotion_resumed
+   - metrics:
+     food_bearing_at_extension_rad=0.0
+     grooming_sweep_amplitude=0.9500000000000004
+     proboscis_abs_angular_error_rad=0.0
+     proboscis_angular_error_rad=0.0
+     proboscis_target_bearing_rad=0.0
+
+5. PYTHONPATH=src python3 scripts/replay_run.py --input outputs/review/global-qa/bridge_behavior --verify
+   Exit code: 0
+   Parsed artifact: outputs/review/global-qa/bridge_behavior/replay_evidence.json
+   Facts:
+   - status: ok
+   - verified_ticks: 720
+   - verified_events: 2160
+   - deterministic_controls: true
+
+Brain/body smoke sanity
+- Used existing final evidence artifacts rather than rerunning the individual conda smoke commands:
+  - outputs/smoke/brain_final/summary.json
+  - outputs/smoke/body_final/body_env.json
+  - outputs/smoke/body_final/child_timeout.json
+  - .omo/evidence/final-f3-real-qa.json
+- Brain smoke facts parsed:
+  - status: ok
+  - python_executable: /opt/miniconda3/envs/brain_env/bin/python
+  - brian2: 2.9.0
+  - pandas: 2.3.3
+  - pyarrow: 24.0.0
+  - selected Shiu version: 630
+  - sugar validation: ok, 21/21 IDs present
+  - toy network spike_count: 10
+- Body smoke facts parsed:
+  - status: ok
+  - body_python: /opt/miniconda3/envs/flygym_env/bin/python
+  - flygym: 2.0.2
+  - mujoco: 3.6.0
+  - simulation: ok, engine mujoco, 20 steps
+  - renderer: skipped/none in headless mode
+  - viewer: available_headless_skipped
+  - child timeout wrapper status: ok, timed_out false
+
+No fake success / stale-success checks
+- Exact demo command exited 1, not 0.
+- outputs/review/global-qa/eon_demo/summary.json is absent.
+- outputs/review/global-qa/eon_demo/video contains no success video files.
+- failure_manifest.json is the only final-status artifact for the exact demo run.
+- The manifest reports the documented P0 blocker exactly: p0_body_process_timeout.
+
+No unbounded or hanging child evidence
+- failure_manifest.json reports children_alive_after_cleanup: [].
+- The recorded brain pid 90413 was checked with os.kill(pid, 0) after the run and returned ProcessLookupError/not_running.
+- Body pid in the manifest is null after cleanup.
+- Process table enumeration via ps was sandbox-blocked with "operation not permitted"; verdict therefore relies on the runner cleanup manifest, bounded command exits, and the narrow recorded-PID probe.
+
+Cleanup
+- No manual temp files were created.
+- Python unittest TemporaryDirectory use cleaned its own temp artifacts.
+- Allowed review artifacts remain under outputs/review/global-qa for audit.
+
+Scenario coverage summary
+- P0 exact demo blocker: covered by command 1 and failure_manifest.json.
+- Fixture behavior replay: covered by commands 3 and 4, behavior_summary.json.
+- Default test smoke: covered by command 2.
+- Stale-success avoidance: covered by command 1 artifact facts and command 2 stale fixture test.
+
+PASS rationale
+- PASS because the final accepted state is honestly blocked by the documented P0 body-process timeout, not by a fake successful summary.
+- PASS because the exact demo run is bounded, exits nonzero with the expected P0 code, and reports no live children after cleanup.
+- PASS because replay/behavior fixture coverage and focused tests pass.

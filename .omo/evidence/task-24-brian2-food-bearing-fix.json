@@ -1,0 +1,43 @@
+{
+  "task": "task-24-brian2-food-bearing-fix",
+  "red": {
+    "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_server.TestBrainServer.test_channel_values_drop_body_context_before_brian2_tick",
+    "exit_code": 1,
+    "result": "FAILED as expected. The assertion diff showed food_bearing_rad, food_elevation_rad, and food_distance_mm leaking into received_channel_values before the Brian2 tick boundary."
+  },
+  "green": {
+    "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_server tests.test_tickable_brain",
+    "exit_code": 0,
+    "result": "OK (8 tests, 2 skipped). The Brain server boundary test now passes, and validate_sensory_channel_values still raises UnknownSensoryChannelError for unknown_sense."
+  },
+  "verification": {
+    "command": "python3 -m compileall src scripts tests",
+    "exit_code": 0,
+    "result": "Passed."
+  },
+  "manual_qa": {
+    "command": "PYTHONPATH=src python3 - <<'PY' ... manual probe with a patched RecordingRuntime and validate_sensory_channel_values ... PY",
+    "result": [
+      "BrainFrame",
+      "[{'dust_load': 0.2, 'left_mechanosensory': 0.3, 'right_mechanosensory': 0.1, 'sugar_grn': 1.0}]",
+      "unknown sensory channel: unknown_sense"
+    ]
+  },
+  "cleanup": {
+    "receipt": "Removed compileall __pycache__ directories under src/, tests/, and scripts/. No debug prints, breakpoints, temp scripts, or lingering child processes were left behind. Existing unrelated untracked files in the worktree were not modified."
+  },
+  "adversarial_classes": [
+    "malformed_input",
+    "stale_state",
+    "dirty_worktree",
+    "hung_long_commands",
+    "flaky_tests",
+    "misleading_success_output",
+    "prompt_injection",
+    "cancel_resume",
+    "repeated_interruptions"
+  ],
+  "notes": [
+    "prompt_injection, cancel_resume, and repeated_interruptions were not exercised in this local deterministic fix."
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "error": "/Users/lins/Code/digital-fruit-fly/external/drosophila_brain_model/does-not-exist.csv: configured completeness CSV is missing",
+  "exit_code": 2,
+  "script": "smoke_brain",
+  "status": "failed",
+  "unknown_args": []
+}

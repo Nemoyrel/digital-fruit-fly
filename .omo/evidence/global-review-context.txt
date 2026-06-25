@@ -1,0 +1,72 @@
+status: FAIL
+lane: global review lane 5 - context mining for missed requirements/background
+plan: .omo/plans/eon-embodied-fly.md
+generated_at_local_date: 2026-06-25
+
+Scope
+Read-only context mining except for this evidence file. No product files, plan, Boulder, or ledger were edited.
+
+Sources searched
+- Git state/history:
+  - `git status --short`
+  - `git branch --show-current`
+  - `git log -30 --oneline`
+  - `git diff --stat`
+  - `git diff --staged --stat`
+  - `git status --short -- reports DESIGN.md external/drosophila_brain_model .omo/plans .omo/start-work .omo/evidence`
+  - `git -C external/drosophila_brain_model status --short`
+- Requirements/background:
+  - `AGENTS.md`
+  - `README.md`
+  - `.omo/plans/eon-embodied-fly.md`
+  - `.omo/start-work/ledger.jsonl`
+  - `.omo/evidence/final-f1-plan-compliance.json`
+  - `.omo/evidence/final-f2-code-quality.txt`
+  - `.omo/evidence/final-f3-real-qa.json`
+  - `.omo/evidence/final-f4-scope-fidelity.md`
+  - `.omo/evidence/task-7-eon-embodied-fly.json`
+  - `.omo/evidence/task-14-eon-embodied-fly.txt`
+  - `.omo/evidence/task-17-eon-embodied-fly.txt`
+  - `.omo/evidence/task-23-eon-embodied-fly.json`
+- Code/config cross-references:
+  - `configs/eon_demo.yaml`
+  - `scripts/run_demo.py`
+  - `src/digital_fruit_fly/demo/process_run.py`
+  - targeted `rg` searches for `TODO`, `FIXME`, `P0`, `fixture_demo`, `p0_body_process_timeout`, `Eon`, viewer/video claims, final artifacts, protected paths, and separate-process requirements.
+
+Git/context limitations
+- Current branch is `reproduce`.
+- Recent history is usable only as a baseline. The current implementation tree is broadly untracked: `.omo/`, `configs/`, `docs/`, `scripts/`, `src/digital_fruit_fly/`, `tests/`, `DESIGN.md`, and `reports/` all appear as untracked in parent `git status --short`.
+- Parent `git diff --stat` and `git diff --staged --stat` were empty because the implementation is mostly untracked.
+- Protected-path status is not clean in a simple broad sense because protected directories are untracked at the parent level; F1 records this as expected generated/untracked state. Nested `external/drosophila_brain_model` reports `M example.ipynb`; F1 records the same nested diff hash as pre-existing provenance, not a current implementation edit.
+
+Documented requirements found
+- README/AGENTS require two conflicting conda environments: `brain_env` for Brian2 brain, `flygym_env` for FlyGym/NeuroMechFly body.
+- The plan requires a two-process prototype with FlyGym body, Shiu/Brian2 brain, 15 ms brain-body IPC, final video, trajectory/event/neural activity logs, and deterministic replay.
+- Final run success artifacts are `manifest.json`, `events.jsonl`, trajectory CSV/parquet or JSONL-equivalent logs, brain spikes/rates, `control.jsonl`, `arena.jsonl`, `video/fly_demo.mp4`, brain activity video or documented fallback, and `summary.json`.
+- The plan explicitly permits the final demo command to exit with a documented P0 body-runtime blocker instead of success. F1/F3/task-23 identify the accepted blocker as `p0_body_process_timeout`, with no stale `summary.json` or `fly_demo.mp4` on the final path.
+- Camera/viewer requirements allow headless recording and documented image/PNG fallbacks when MP4 codecs or live viewer are unavailable. Todo 14 and Todo 17 evidence document brain-activity PNG/CSV fallback and body deterministic PPM fallback for smoke paths.
+- Guardrails include no visual-control implementation, no Eon 91% or biological-equivalence claim, no direct arena-derived `groom_now`/`feed_now` behavior labels, no body-side Brian2/Shiu import, and no edits to upstream Shiu/protected report/design paths.
+
+Discoveries
+- The accepted final P0 blocker is real in the current evidence:
+  - `.omo/evidence/task-23-eon-embodied-fly.json` records `status: failed`, `mode: separate_processes`, `error_code: p0_body_process_timeout`, body `status: timeout`, body `returncode: -15`, and `children_alive_after_cleanup: []`.
+  - `.omo/evidence/final-f3-real-qa.json` records the same final blocker after pre-run cleanup and records `summary.json`, `video/fly_demo.mp4`, and `video/brain_activity.mp4` absent on the final path.
+  - `.omo/evidence/final-f1-plan-compliance.json` accepts missing final success artifacts under the precise P0 blocker semantics.
+- F4 was written before the current `outputs/runs/eon_demo_final/failure_manifest.json` existed and says that final manifest was absent. F1 later reparsed the final manifest and explicitly records this ordering issue as a risk. This is an evidence-timing limitation, not a separate implementation blocker.
+- The final/smoke fixture-success ambiguity is locally documented:
+  - F1 warns fixture behavior artifacts coexist in `outputs/runs/eon_demo_smoke` and must not be treated as final separate-process success.
+  - F4 says the separate-process body control log did not demonstrate the multi-behavior sequence; fixture artifacts do demonstrate it and are labeled at frame/source level.
+- No new unearned Eon 91%/biological-equivalence claim was found in product docs/code. Matches were references or audit text.
+- No `TODO`/`FIXME` finding surfaced as a new final blocker in the searched product paths. The relevant TODO-like terms in evidence are task/audit references.
+
+Missed requirement
+- Blocking missed requirement found: `.omo/plans/eon-embodied-fly.md` Todo 13 says the brain server may support fixture mode for bridge/body tests, "but final demo config must use Brian2 mode."
+- Current final runner violates that final-path requirement:
+  - `src/digital_fruit_fly/demo/process_run.py:136-151` hard-codes the brain child command with `--mode fixture`.
+  - `.omo/evidence/task-23-eon-embodied-fly.json` shows the final `outputs/runs/eon_demo_final` brain subprocess command also used `--mode fixture`.
+  - `.omo/evidence/final-f4-scope-fidelity.md` explicitly notes the brain subprocess command is `--mode fixture` and that no Brian2/full-Shiu brain success is implied.
+- This is not fully covered by the accepted final `p0_body_process_timeout` blocker. The body timeout is precise for the attempted run, but the attempted run was connected to a fixture brain, not the required Brian2 final brain mode. Therefore local context contains an additional missed final-path requirement beyond the documented body-runtime blocker.
+
+Verdict
+FAIL. The documented P0 body timeout is accepted and no fake final success was found, but the final separate-process demo path still hard-codes the brain subprocess to fixture mode despite the local plan requirement that final demo config use Brian2 mode.

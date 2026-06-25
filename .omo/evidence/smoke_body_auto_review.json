@@ -1,0 +1,31 @@
+{
+  "body_python": "/opt/miniconda3/envs/flygym_env/bin/python",
+  "camera_enabled": false,
+  "child_payload": {
+    "cache_dirs": {
+      "MPLCONFIGDIR": "outputs/smoke/body_auto_review/cache/matplotlib",
+      "MUJOCO_GL": "",
+      "NUMBA_CACHE_DIR": "outputs/smoke/body_auto_review/cache/numba",
+      "XDG_CACHE_HOME": "outputs/smoke/body_auto_review/cache/xdg"
+    },
+    "duration_sec": 12.151240959006827,
+    "error": "invalid CoreGraphics connection",
+    "error_type": "CGLError",
+    "platform": "macOS-26.5.1-arm64-arm-64bit",
+    "probe_stage": "child",
+    "python": "/opt/miniconda3/envs/flygym_env/bin/python",
+    "status": "failed"
+  },
+  "config": "configs/body_smoke.yaml",
+  "error": "invalid CoreGraphics connection",
+  "error_type": "CGLError",
+  "exit_code": 1,
+  "probe_stage": "child",
+  "reproduction_command": "/opt/miniconda3/envs/flygym_env/bin/python -m digital_fruit_fly.body.flygym_probe --child-probe --child-output outputs/smoke/body_auto_review/child_probe.json --steps 20 --renderer auto --headless",
+  "script": "smoke_body",
+  "severity": "P0",
+  "status": "failed",
+  "stderr": "WARNING:matplotlib.font_manager:Matplotlib is building the font cache; this may take a moment.\n{\"cache_dirs\": {\"MPLCONFIGDIR\": \"outputs/smoke/body_auto_review/cache/matplotlib\", \"MUJOCO_GL\": \"\", \"NUMBA_CACHE_DIR\": \"outputs/smoke/body_auto_review/cache/numba\", \"XDG_CACHE_HOME\": \"outputs/smoke/body_auto_review/cache/xdg\"}, \"duration_sec\": 12.151240959006827, \"error\": \"invalid CoreGraphics connection\", \"error_type\": \"CGLError\", \"platform\": \"macOS-26.5.1-arm64-arm-64bit\", \"probe_stage\": \"child\", \"python\": \"/opt/miniconda3/envs/flygym_env/bin/python\", \"status\": \"failed\"}\nException ignored in: <function Renderer.__del__ at 0x1071caf20>\nTraceback (most recent call last):\n  File \"/opt/miniconda3/envs/flygym_env/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py\", line 339, in __del__\n    self.close()\n  File \"/opt/miniconda3/envs/flygym_env/lib/python3.12/site-packages/mujoco/rendering/classic/renderer.py\", line 327, in close\n    if self._mjr_context:\n       ^^^^^^^^^^^^^^^^^\nAttributeError: 'Renderer' object has no attribute '_mjr_context'\n",
+  "stdout": "",
+  "timed_out": false
+}

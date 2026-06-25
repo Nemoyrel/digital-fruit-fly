@@ -1,0 +1,92 @@
+Task: Todo 14 - neural activity visualization artifacts
+Status: done
+
+Changed files:
+- src/digital_fruit_fly/observability/brain_video.py
+- scripts/render_brain_activity.py
+- tests/test_brain_video.py
+- .omo/evidence/task-14-eon-embodied-fly.txt
+- outputs/smoke/brain_server/video/brain_activity.png
+- outputs/smoke/brain_server/video/brain_activity.summary.csv
+- outputs/smoke/brain_server/video/brain_activity.metadata.json
+- outputs/smoke/brain_server/video/mplconfig/fontlist-v390.json
+
+Failing-first tests:
+- Command: PYTHONPATH=src python3 -m unittest tests.test_brain_video
+- Exit code: 1
+- Failure captured before implementation:
+  ModuleNotFoundError: No module named 'digital_fruit_fly.observability.brain_video'
+
+Automated verification:
+- Command: PYTHONPATH=src python3 -m unittest tests.test_brain_video
+- Exit code: 0
+- Evidence: Ran 4 tests in 0.005s - OK
+
+- Command: /opt/miniconda3/envs/brain_env/bin/python scripts/render_brain_activity.py --input outputs/smoke/brain_server --output outputs/smoke/brain_server/video/brain_activity.mp4
+- Exit code: 0
+- Evidence:
+  {"artifact_path": "outputs/smoke/brain_server/video/brain_activity.png", "fallback_reason": "video unavailable: No module named 'imageio'", "frame_count": 5, "metadata_path": "outputs/smoke/brain_server/video/brain_activity.metadata.json", "mode": "png_fallback", "readouts": ["feed", "forward", "groom", "stop", "turn"], "row_count": 25, "summary_csv_path": "outputs/smoke/brain_server/video/brain_activity.summary.csv"}
+
+- Command: /opt/miniconda3/envs/brain_env/bin/python scripts/render_brain_activity.py --input outputs/smoke/brain_activity_missing --output outputs/smoke/brain_activity_missing/video/brain_activity.mp4
+- Exit code: 2
+- Evidence: missing brain rates log: outputs/smoke/brain_activity_missing/brain/rates.csv
+- Stale-output probe: a pre-existing outputs/smoke/brain_activity_missing/video/brain_activity.mp4 was removed before the command exited; `test ! -e outputs/smoke/brain_activity_missing/video/brain_activity.mp4` returned 0.
+
+- Command: /opt/miniconda3/envs/brain_env/bin/python scripts/render_brain_activity.py --input outputs/smoke/brain_activity_empty --output outputs/smoke/brain_activity_empty/video/brain_activity.mp4
+- Exit code: 2
+- Evidence: no activity rows in brain rates log: outputs/smoke/brain_activity_empty/brain/rates.csv
+
+- Command: /opt/miniconda3/envs/brain_env/bin/python scripts/render_brain_activity.py --input outputs/smoke/brain_activity_malformed --output outputs/smoke/brain_activity_malformed/video/brain_activity.mp4
+- Exit code: 2
+- Evidence: malformed numeric value at outputs/smoke/brain_activity_malformed/brain/rates.csv:2: could not convert string to float: 'not_a_rate'
+
+- Command: stat -f '%N %z bytes' outputs/smoke/brain_server/video/brain_activity.png outputs/smoke/brain_server/video/brain_activity.summary.csv outputs/smoke/brain_server/video/brain_activity.metadata.json
+- Exit code: 0
+- Evidence:
+  outputs/smoke/brain_server/video/brain_activity.png 24494 bytes
+  outputs/smoke/brain_server/video/brain_activity.summary.csv 235 bytes
+  outputs/smoke/brain_server/video/brain_activity.metadata.json 462 bytes
+
+- Command: python3 -m json.tool outputs/smoke/brain_server/video/brain_activity.metadata.json
+- Exit code: 0
+- Evidence: metadata JSON is valid and records mode=png_fallback, frame_count=5, row_count=25, fallback_reason="video unavailable: No module named 'imageio'".
+
+- Command: test ! -e outputs/smoke/brain_server/video/brain_activity.mp4
+- Exit code: 0
+- Evidence: no partial/corrupt requested MP4 was left when video codec support was unavailable.
+
+- Command: pure LOC check for src/digital_fruit_fly/observability/brain_video.py scripts/render_brain_activity.py tests/test_brain_video.py
+- Exit code: 0
+- Evidence:
+  src/digital_fruit_fly/observability/brain_video.py 208
+  scripts/render_brain_activity.py 42
+  tests/test_brain_video.py 64
+
+- Command: git -C external/drosophila_brain_model status --short
+- Exit code: 0
+- Evidence: " M example.ipynb"
+- Interpretation: nested external repo still has the pre-existing example.ipynb dirty state recorded by earlier task evidence; Todo 14 did not edit external.
+
+Manual QA artifacts:
+- Heatmap PNG: outputs/smoke/brain_server/video/brain_activity.png (24494 bytes)
+- Summary CSV: outputs/smoke/brain_server/video/brain_activity.summary.csv (235 bytes)
+- Metadata: outputs/smoke/brain_server/video/brain_activity.metadata.json (462 bytes)
+- Visual inspection: PNG is nonblank and shows feed/forward/groom/stop/turn readouts over frames 0-4 with a rate colorbar.
+- Fallback reason: brain_env has matplotlib but no imageio, so MP4 writing falls back to PNG summary and CSV metadata.
+
+Adversarial QA:
+- malformed_input: covered by malformed numeric failure probe; exits 2 with path and line number, no MP4 written.
+- stale_state: renderer removes stale requested output before parsing, rewrites summary/metadata, and only replaces requested MP4 after successful video encode; final acceptance reads existing Todo 13 rates.csv at outputs/smoke/brain_server/brain/rates.csv.
+- dirty_worktree: repository was already broadly untracked; Todo 14 touched only owned source/test/script/evidence paths and allowed smoke output artifacts.
+- hung_long_commands: brain_env render completed in-process with exit code 0; no long-running server was started for Todo 14.
+- flaky_tests: unit tests use tempfile directories and no sleeps or network ports.
+- misleading_success_output: success was checked by JSON metadata, nonzero artifact sizes, valid metadata parse, visual PNG inspection, and no requested MP4 on fallback.
+
+Cleanup:
+- Temporary header-only and malformed rates.csv fixtures under outputs/smoke/brain_activity_empty and outputs/smoke/brain_activity_malformed were removed after probes.
+- No partial/corrupt brain_activity.mp4 exists.
+- Process listing via ps was sandbox-blocked with "operation not permitted"; all render exec commands returned and no tool sessions remain active.
+
+Risks/blockers:
+- MP4 output was not produced because imageio is unavailable in brain_env. Acceptance allows documented PNG/CSV fallback, which is present and nonempty.
+- Renderer supports Todo 13 long-form rates.csv and compatible direct rates.csv input; it does not parse arbitrary spike raster formats yet.

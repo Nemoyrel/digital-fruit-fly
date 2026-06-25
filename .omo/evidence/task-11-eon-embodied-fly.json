@@ -1,0 +1,184 @@
+{
+  "task": "Todo 11 - create versioned neural mapping files for sensory and motor channels",
+  "status": "passed",
+  "verifier_followup": {
+    "status": "fixed",
+    "finding": "Independent verification returned needs-fix because validation channel JSON omitted sign, normalization, and rationale.",
+    "cause": "ChannelResolution.to_json() did not carry all metadata from ChannelMapping.",
+    "fix": "ChannelResolution now stores and serializes sign, normalization, and rationale for every resolved or unusable channel."
+  },
+  "commands": [
+    {
+      "name": "red_failing_first",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_mapping",
+      "exit_code": 1,
+      "summary": "Failed before implementation with ModuleNotFoundError for digital_fruit_fly.brain.mapping."
+    },
+    {
+      "name": "focused_unit_tests",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_mapping",
+      "exit_code": 0,
+      "summary": "4 unittest cases passed: configured mapping resolves, validation JSON preserves required channel metadata, fake FlyWire ID reports channel and bad ID, undeclared ID rejection."
+    },
+    {
+      "name": "verifier_regression_red",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_mapping",
+      "exit_code": 1,
+      "summary": "After adding the metadata preservation test, it failed against the verifier-reported bug because serialized sugar_grn lacked sign, normalization, and rationale."
+    },
+    {
+      "name": "existing_shiu_adapter_tests",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_shiu_adapter",
+      "exit_code": 0,
+      "summary": "Existing Todo 6 adapter behavior preserved."
+    },
+    {
+      "name": "brain_env_mapping_smoke",
+      "command": "/opt/miniconda3/envs/brain_env/bin/python scripts/smoke_brain.py --config configs/brain_smoke.yaml --validate-mapping --output outputs/smoke/brain",
+      "exit_code": 0,
+      "artifacts": [
+        "outputs/smoke/brain/brain_env.json",
+        "outputs/smoke/brain/summary.json",
+        "outputs/smoke/brain/mapping_validation.json"
+      ],
+      "summary": "Resolved 9 channels, 0 unusable channels, selected Shiu 630 completeness table. Regenerated mapping_validation.json includes sign, normalization, and rationale on every channel. Brian2 fell back to numpy codegen because the sandbox blocks the Cython cache lock."
+    },
+    {
+      "name": "fake_id_direct_validation_failure",
+      "command": "PYTHONPATH=src python3 - <<'PY' ... fake mapping fixture ... PY",
+      "exit_code": 0,
+      "summary": "Confirmed failure summary: sugar_grn: missing FlyWire IDs 999999999999999999."
+    },
+    {
+      "name": "fake_id_smoke_failure",
+      "command": "/opt/miniconda3/envs/brain_env/bin/python - <<'PY' ... temp mapping and temp config with --evidence outputs/smoke/brain/fake-mapping/evidence.json ... PY",
+      "exit_code": 0,
+      "inner_smoke_exit_code": 2,
+      "artifacts": [
+        "outputs/smoke/brain/fake-mapping/error.json",
+        "outputs/smoke/brain/fake-mapping/mapping_validation.json",
+        "outputs/smoke/brain/fake-mapping/evidence.json"
+      ],
+      "summary": "Smoke failed honestly with sugar_grn and fake FlyWire ID 999999999999999999 in JSON stderr and artifacts."
+    },
+    {
+      "name": "pure_loc",
+      "command": "awk pure LOC check for src/digital_fruit_fly/brain/mapping.py scripts/smoke_brain.py tests/test_brain_mapping.py",
+      "exit_code": 0,
+      "result": {
+        "src/digital_fruit_fly/brain/mapping.py": 233,
+        "scripts/smoke_brain.py": 202,
+        "tests/test_brain_mapping.py": 73
+      },
+      "summary": "All touched Python files are <=250 pure LOC. mapping.py and smoke_brain.py are in the 200-250 warning band; future growth should split parsing/resolution or smoke failure helpers."
+    },
+    {
+      "name": "verifier_field_check",
+      "command": "python3 - <<'PY' ... check required keys in outputs/smoke/brain/mapping_validation.json ... PY",
+      "exit_code": 0,
+      "stdout": "{\"channel_count\": 9, \"missing\": {}, \"status\": \"ok\"}",
+      "summary": "Verifier-equivalent field check found no channel missing kind, channel_name, flywire_ids, brian_indices, missing_flywire_ids, brain_index_resolution_status, usable, biologically_curated, provisional, source_status, sign, normalization, or rationale."
+    },
+    {
+      "name": "hardcoded_flywire_source_scan",
+      "command": "rg -n \"720575[0-9]{12}\" src scripts -g '*.py'",
+      "exit_code": 1,
+      "summary": "No hard-coded FlyWire IDs found in Python source under src/ or scripts/. IDs live in configs/brain_mapping.yaml and test fixtures only."
+    },
+    {
+      "name": "protected_path_diff",
+      "command": "git diff -- external/drosophila_brain_model reports DESIGN.md .omo/plans .omo/start-work/ledger.jsonl src/digital_fruit_fly/body src/digital_fruit_fly/arena src/digital_fruit_fly/bridge",
+      "exit_code": 0,
+      "summary": "No diff output for protected or explicitly non-owned paths."
+    },
+    {
+      "name": "nested_shiu_repo_status",
+      "command": "git -C external/drosophila_brain_model status --short",
+      "exit_code": 0,
+      "stdout": " M example.ipynb",
+      "summary": "Nested external checkout remains dirty exactly as pre-existing context warned; this task did not edit it."
+    },
+    {
+      "name": "process_cleanup_check_sandboxed",
+      "command": "ps -ax -o pid=,command= | rg 'scripts/smoke_brain.py|brain_env/bin/python|brian2'",
+      "exit_code": 1,
+      "summary": "Sandbox blocked ps with operation not permitted."
+    },
+    {
+      "name": "process_cleanup_check_escalated",
+      "command": "ps -ax -o pid=,command= | rg 'scripts/smoke_brain.py|brain_env/bin/python|brian2'",
+      "exit_code": 0,
+      "stdout": "Only the ps/rg inspection command itself matched.",
+      "summary": "No leftover smoke_brain, brain_env python, or Brian2 process was found."
+    }
+  ],
+  "mapping_summary": {
+    "schema_version": "1.0.0",
+    "mapping_version": "2026-06-24.task-11",
+    "active_file": "configs/brain_mapping.yaml",
+    "format": "JSON-compatible YAML",
+    "resolution_dataset": "Shiu 630 completeness CSV selected by Todo 6 adapter validation",
+    "channel_count": 9,
+    "sensory_channels": [
+      "sugar_grn",
+      "dust_load",
+      "left_mechanosensory",
+      "right_mechanosensory"
+    ],
+    "motor_readout_groups": [
+      "forward",
+      "turn",
+      "feed",
+      "groom",
+      "stop"
+    ],
+    "biologically_curated_channels": 1,
+    "engineering_provisional_channels": 8,
+    "unusable_channels": 0
+  },
+  "validation_results": {
+    "normal_mapping": {
+      "status": "ok",
+      "artifact": "outputs/smoke/brain/mapping_validation.json",
+      "unusable_channel_count": 0,
+      "required_channel_metadata_complete": true
+    },
+    "fake_id_failure": {
+      "status": "failed_as_expected",
+      "bad_id": 999999999999999999,
+      "channel": "sugar_grn",
+      "artifact": "outputs/smoke/brain/fake-mapping/error.json"
+    }
+  },
+  "manual_qa": {
+    "malformed_input": "Fake-ID fixtures exercised direct validator and smoke boundary. Both named sugar_grn and 999999999999999999.",
+    "stale_state": "Smoke writes brain_env.json, summary.json, and mapping_validation.json under outputs/smoke/brain for each validation run.",
+    "dirty_worktree": "Top-level worktree is broadly untracked from pre-existing project state. Nested Shiu repo remains dirty with M example.ipynb and was not modified.",
+    "hung_long_commands": "Acceptance smoke completed in 11.6 seconds. Process inspection required escalation because sandbox blocked ps; escalated inspection found no leftover smoke/Brian process.",
+    "flaky_tests": "Focused unittest command passed before and after smoke wiring; Shiu adapter regression tests also passed.",
+    "misleading_success_output": "Success requires mapping_validation.status ok, channel_count 9, unusable_channel_count 0, per-channel resolved brain indices, and required metadata fields sign/normalization/rationale."
+  },
+  "cleanup": {
+    "removed": [
+      "temporary fake mapping directories created by tempfile.TemporaryDirectory"
+    ],
+    "kept": [
+      "outputs/smoke/brain/brain_env.json",
+      "outputs/smoke/brain/summary.json",
+      "outputs/smoke/brain/mapping_validation.json",
+      "outputs/smoke/brain/fake-mapping/error.json",
+      "outputs/smoke/brain/fake-mapping/mapping_validation.json",
+      "outputs/smoke/brain/fake-mapping/evidence.json"
+    ],
+    "background_processes": "none found",
+    "external_repo_modified_by_task": false,
+    "external_repo_dirty_files": [
+      "example.ipynb"
+    ]
+  },
+  "risks": [
+    "Eight non-sugar channels are engineering provisional placeholders. They resolve to Brian indices but are not biological claims.",
+    "The active mapping file is JSON-compatible YAML to avoid adding a YAML dependency to normal Python tests.",
+    "src/digital_fruit_fly/brain/mapping.py is 233 pure LOC and scripts/smoke_brain.py is 202 pure LOC; both are below the hard cap but in the warning band."
+  ]
+}

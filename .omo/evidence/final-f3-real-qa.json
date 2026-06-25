@@ -1,0 +1,223 @@
+{
+  "task": "Final verification F3 - Real manual QA for .omo/plans/eon-embodied-fly.md",
+  "status": "approved",
+  "approval_basis": "The final demo did not succeed, but it produced a precise P0 blocker via failure_manifest.json with no stale success artifacts after the final output directories were cleaned before execution.",
+  "generated_at_utc": "2026-06-24T19:12:00Z",
+  "cwd": "/Users/lins/Code/digital-fruit-fly",
+  "pre_run_cleanup": {
+    "command": "rm -rf outputs/smoke/brain_final outputs/smoke/body_final outputs/runs/eon_demo_final",
+    "exit_code": 0,
+    "scope": "allowed final QA output directories only"
+  },
+  "commands": [
+    {
+      "name": "brain_smoke",
+      "command": "/opt/miniconda3/envs/brain_env/bin/python scripts/smoke_brain.py --config configs/brain_smoke.yaml --output outputs/smoke/brain_final",
+      "exit_code": 0,
+      "parsed_artifact": "outputs/smoke/brain_final/summary.json",
+      "facts": {
+        "status": "ok",
+        "python_executable": "/opt/miniconda3/envs/brain_env/bin/python",
+        "brian2": "2.9.0",
+        "pandas": "2.3.3",
+        "pyarrow": "24.0.0",
+        "selected_shiu_version": "630",
+        "selected_sugar_validation_ok": true,
+        "selected_sugar_expected_count": 21,
+        "selected_sugar_present_count": 21,
+        "toy_network_spike_count": 10
+      }
+    },
+    {
+      "name": "body_smoke",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python scripts/smoke_body.py --config configs/body_smoke.yaml --output outputs/smoke/body_final --headless --steps 20 --timeout-sec 60",
+      "exit_code": 0,
+      "parsed_artifact": "outputs/smoke/body_final/body_env.json",
+      "facts": {
+        "status": "ok",
+        "body_python": "/opt/miniconda3/envs/flygym_env/bin/python",
+        "flygym": "2.0.2",
+        "mujoco": "3.6.0",
+        "simulation_status": "ok",
+        "simulation_engine": "mujoco",
+        "simulation_steps": 20,
+        "renderer_status": "skipped",
+        "renderer": "none",
+        "viewer_status": "available_headless_skipped"
+      }
+    },
+    {
+      "name": "final_demo",
+      "command": "python3 scripts/run_demo.py --config configs/eon_demo.yaml --output outputs/runs/eon_demo_final --duration-sec 60 --seed 1",
+      "exit_code": 1,
+      "parsed_artifact": "outputs/runs/eon_demo_final/failure_manifest.json",
+      "facts": {
+        "status": "failed",
+        "error_code": "p0_body_process_timeout",
+        "error": "body subprocess timed out while connected to brain",
+        "mode": "separate_processes",
+        "duration_sec": 60.0,
+        "requested_ticks": 4000,
+        "children_alive_after_cleanup": [],
+        "brain_status": "ok",
+        "brain_returncode": 0,
+        "body_status": "timeout",
+        "body_returncode": -15,
+        "body_cleanup": "completed"
+      }
+    }
+  ],
+  "parsed_artifacts": {
+    "brain_final": {
+      "summary_json": {
+        "exists": true,
+        "size_bytes": 2996,
+        "mtime_utc": "2026-06-24T19:10:04Z",
+        "status": "ok"
+      },
+      "brain_env_json": {
+        "exists": true,
+        "size_bytes": 2996,
+        "mtime_utc": "2026-06-24T19:10:04Z",
+        "status": "ok"
+      }
+    },
+    "body_final": {
+      "body_env_json": {
+        "exists": true,
+        "size_bytes": 1392,
+        "mtime_utc": "2026-06-24T19:10:21Z",
+        "status": "ok"
+      },
+      "child_probe_json": {
+        "exists": true,
+        "size_bytes": 1103,
+        "mtime_utc": "2026-06-24T19:10:21Z"
+      },
+      "child_timeout_json": {
+        "exists": true,
+        "size_bytes": 1595,
+        "mtime_utc": "2026-06-24T19:10:21Z",
+        "status": "ok"
+      }
+    },
+    "eon_demo_final": {
+      "failure_manifest_json": {
+        "exists": true,
+        "size_bytes": 1733,
+        "mtime_utc": "2026-06-24T19:11:27Z",
+        "status": "failed",
+        "error_code": "p0_body_process_timeout"
+      },
+      "summary_json": {
+        "exists": false
+      },
+      "manifest_json": {
+        "exists": true,
+        "size_bytes": 519,
+        "mtime_utc": "2026-06-24T19:10:27Z",
+        "created_at_utc": "2026-06-24T19:10:27.831982Z"
+      },
+      "events_jsonl": {
+        "exists": true,
+        "size_bytes": 232,
+        "line_count": 4,
+        "mtime_utc": "2026-06-24T19:10:30Z",
+        "event_kinds": [
+          "body_server_start",
+          "handshake",
+          "shutdown",
+          "brain_server_stop"
+        ]
+      },
+      "control_jsonl": {
+        "exists": true,
+        "size_bytes": 19945702,
+        "line_count": 4000,
+        "mtime_utc": "2026-06-24T19:10:30Z"
+      },
+      "arena_jsonl": {
+        "exists": true,
+        "size_bytes": 3182093,
+        "line_count": 4000,
+        "mtime_utc": "2026-06-24T19:10:30Z"
+      },
+      "trajectory_jsonl": {
+        "exists": true,
+        "size_bytes": 572386,
+        "line_count": 4000,
+        "mtime_utc": "2026-06-24T19:10:30Z"
+      },
+      "brain_rates_csv": {
+        "exists": true,
+        "size_bytes": 575815,
+        "line_count": 20001,
+        "mtime_utc": "2026-06-24T19:10:30Z"
+      },
+      "frames_jsonl": {
+        "exists": false
+      },
+      "video_fly_demo_mp4": {
+        "exists": false
+      },
+      "video_brain_activity_mp4": {
+        "exists": false
+      }
+    }
+  },
+  "success_path_checks": {
+    "run_demo_success": false,
+    "event_sequence_checked": false,
+    "event_sequence_reason": "Not applicable because run_demo exited 1 with a documented P0 blocker instead of writing summary.json.",
+    "required_success_artifacts_present": false,
+    "required_success_artifacts_reason": "Success artifacts are absent, which is correct for the blocker path after pre-run cleanup."
+  },
+  "blocker": {
+    "is_precise_p0": true,
+    "code": "p0_body_process_timeout",
+    "message": "body subprocess timed out while connected to brain",
+    "source": "outputs/runs/eon_demo_final/failure_manifest.json",
+    "no_fake_success": true,
+    "no_stale_success_artifacts": true
+  },
+  "process_cleanup": {
+    "runner_reported_children_alive_after_cleanup": [],
+    "manual_process_listing": {
+      "ps_command": "ps -axo pid,ppid,command | rg 'digital-fruit-fly|scripts/(run_demo|run_body|run_brain|smoke_body|smoke_brain)\\\\.py|flygym|brian2|Brian2|FlyGym'",
+      "ps_exit_code": 1,
+      "ps_error": "zsh:1: operation not permitted: ps",
+      "pgrep_command": "pgrep -af 'digital-fruit-fly|scripts/(run_demo|run_body|run_brain|smoke_body|smoke_brain)\\\\.py|flygym|brian2|Brian2|FlyGym'",
+      "pgrep_exit_code": 3,
+      "pgrep_error": "sysmon request failed with error: sysmond service not found; pgrep: Cannot get process list",
+      "result": "process listing sandbox-blocked; relied on bounded command exits and failure_manifest cleanup facts"
+    },
+    "manual_terminations": []
+  },
+  "adversarial_probes": {
+    "malformed_input_fake_success": "passed: final_demo did not fake success; failure_manifest.json has explicit P0 blocker and summary.json/videos are absent",
+    "stale_state": "passed: final output directories were removed before running; parsed artifacts have fresh mtimes from this QA run",
+    "dirty_worktree": "passed with note: no manual edits to product files, plan, Boulder, or ledger; required scripts refreshed their default .omo/evidence smoke/task evidence side-effect files",
+    "hung_long_commands": "passed: body smoke used --timeout-sec 60; run_demo used its configured 60 second child timeout and exited 1 after cleanup",
+    "misleading_success_output": "passed: verdict is based on JSON manifests and artifact existence, not stdout"
+  },
+  "write_scope": {
+    "manual_writes": [
+      ".omo/evidence/final-f3-real-qa.json"
+    ],
+    "command_output_writes": [
+      "outputs/smoke/brain_final",
+      "outputs/smoke/body_final",
+      "outputs/runs/eon_demo_final"
+    ],
+    "known_script_default_evidence_side_effects": [
+      ".omo/evidence/smoke_brain_latest.json",
+      ".omo/evidence/smoke_body_latest.json",
+      ".omo/evidence/task-23-eon-embodied-fly.json"
+    ],
+    "protected_paths_touched_manually": []
+  },
+  "risks": [
+    "Could not independently enumerate lingering processes because both ps and pgrep were blocked by the sandbox.",
+    "The final demo remains blocked at runtime by the body subprocess timeout; this QA approval only certifies that the blocker is precise and not a fake success."
+  ]
+}

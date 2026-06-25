@@ -1,0 +1,110 @@
+{
+  "changed_files": [
+    "src/digital_fruit_fly/bridge/motor_decoder.py",
+    "tests/test_motor_decoder.py",
+    ".omo/evidence/task-20-eon-embodied-fly.json"
+  ],
+  "cleanup": {
+    "debug_markers_found": false,
+    "plan_checkbox_modified": false,
+    "task_specific_pyc_removed": true,
+    "unrelated_existing_caches_left_untouched": true
+  },
+  "coverage": [
+    "locomotion and signed turn from BrainFrame rates",
+    "feeding direction/proboscis extension with explicit provenance",
+    "typed MissingFoodDirection on selected feeding without direction",
+    "stop highest priority and deterministic feed/groom priority",
+    "smoothing with previous state and stale-state rejection",
+    "spike fallback, malformed numeric readout, missing readout group validation",
+    "food context alone cannot select feed/groom action"
+  ],
+  "exact_commands": [
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_motor_decoder",
+      "exit_code": 1,
+      "phase": "red",
+      "summary": "Expected failure before decoder existed: ModuleNotFoundError for digital_fruit_fly.bridge.motor_decoder."
+    },
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_motor_decoder",
+      "exit_code": 0,
+      "phase": "green",
+      "summary": "7 motor decoder tests passed."
+    },
+    {
+      "command": "python3 -m py_compile src/digital_fruit_fly/bridge/motor_decoder.py tests/test_motor_decoder.py",
+      "exit_code": 0,
+      "phase": "syntax",
+      "summary": "Touched Python files compile."
+    },
+    {
+      "command": "rg -n \"TODO|FIXME|debug|breakpoint|pdb|print\\(\" src/digital_fruit_fly/bridge/motor_decoder.py tests/test_motor_decoder.py",
+      "exit_code": 1,
+      "phase": "debug-marker-scan",
+      "summary": "No matches; rg exit 1 is expected for no matches."
+    },
+    {
+      "command": "awk '!/^[[:space:]]*$/ && !/^[[:space:]]*(#)/' src/digital_fruit_fly/bridge/motor_decoder.py | wc -l",
+      "exit_code": 0,
+      "phase": "loc",
+      "summary": "244 pure LOC."
+    },
+    {
+      "command": "awk '!/^[[:space:]]*$/ && !/^[[:space:]]*(#)/' tests/test_motor_decoder.py | wc -l",
+      "exit_code": 0,
+      "phase": "loc",
+      "summary": "156 pure LOC."
+    },
+    {
+      "command": "PYTHONPATH=src python3 - <<'PY' ... manual decode snippet ... PY",
+      "exit_code": 0,
+      "phase": "manual-qa",
+      "summary": "Feeding selected with explicit sensory provenance and arena_state_used_for_mode=False."
+    },
+    {
+      "command": "rm src/digital_fruit_fly/bridge/__pycache__/motor_decoder.cpython-313.pyc tests/__pycache__/test_motor_decoder.cpython-313.pyc",
+      "exit_code": 0,
+      "phase": "cleanup",
+      "summary": "Removed only task-created pyc files."
+    },
+    {
+      "command": "find src tests -name '*motor_decoder*.pyc' -o -name 'test_motor_decoder*.pyc'",
+      "exit_code": 0,
+      "phase": "cleanup-verify",
+      "summary": "No task-specific pyc files remained."
+    }
+  ],
+  "manual_qa_artifact": {
+    "command": "PYTHONPATH=src python3 - <<'PY' ... manual decode snippet ... PY",
+    "output": {
+      "arena_state_used_for_mode": false,
+      "feeding": 0.96,
+      "food_direction_provenance": "sensory_encoder:food_relative",
+      "proboscis_extension": 0.96,
+      "selected_action": "feeding"
+    }
+  },
+  "plan_checkbox_marked": false,
+  "pure_loc": {
+    "src/digital_fruit_fly/bridge/motor_decoder.py": 244,
+    "tests/test_motor_decoder.py": 156
+  },
+  "red_green_proof": {
+    "green": {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_motor_decoder",
+      "exit_code": 0,
+      "proof": "Ran 7 tests in 0.015s; OK."
+    },
+    "red": {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_motor_decoder",
+      "exit_code": 1,
+      "proof": "7 errors; each failed with ModuleNotFoundError: No module named 'digital_fruit_fly.bridge.motor_decoder' before implementation."
+    }
+  },
+  "risks": [
+    "The new decoder is unit-covered but not wired into body.server_motion because scope restricted ownership to motor_decoder/test/evidence files.",
+    "Motor readout group IDs remain provisional as documented in configs/brain_mapping.yaml; this task validates group names, not biological curation."
+  ],
+  "task": "Todo 20 - downward motor decoder"
+}

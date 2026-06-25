@@ -1,0 +1,17 @@
+{
+  "body_python": "/opt/miniconda3/envs/flygym_env/bin/python",
+  "camera_enabled": false,
+  "child_payload": {},
+  "config": "configs/body_smoke.yaml",
+  "error": "FlyGym/MuJoCo probe timed out",
+  "error_type": "TimeoutExpired",
+  "exit_code": 124,
+  "probe_stage": "fixture",
+  "reproduction_command": "/opt/miniconda3/envs/flygym_env/bin/python -m digital_fruit_fly.body.flygym_probe --child-probe --child-output outputs/smoke/body_stale_timeout/child_probe.json --steps 20 --renderer auto --headless --fixture-sleep-sec 30.0",
+  "script": "smoke_body",
+  "severity": "P0",
+  "status": "timeout",
+  "stderr": "",
+  "stdout": "",
+  "timed_out": true
+}

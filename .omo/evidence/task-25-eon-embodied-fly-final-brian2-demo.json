@@ -1,0 +1,81 @@
+{
+  "task": "task-25-eon-embodied-fly-final-brian2-demo",
+  "demo": {
+    "command": "python3 scripts/run_demo.py --config configs/eon_demo.yaml --output outputs/runs/eon_demo_final --duration-sec 60 --seed 1",
+    "exit_code": 1,
+    "result": "FAILED. The run ended in `p0_brain_process_failed` after the Brian2 subprocess crashed while the body process was still connected."
+  },
+  "replay": {
+    "command": "PYTHONPATH=src python3 scripts/replay_run.py --input outputs/runs/eon_demo_final --verify",
+    "exit_code": null,
+    "result": "NOT RUN. The primary demo did not exit 0, so the replay verifier precondition was not met."
+  },
+  "artifacts": {
+    "run_dir": "outputs/runs/eon_demo_final",
+    "summary_json": {
+      "path": "outputs/runs/eon_demo_final/summary.json",
+      "exists": false
+    },
+    "video_fly_demo_mp4": {
+      "path": "outputs/runs/eon_demo_final/video/fly_demo.mp4",
+      "exists": false
+    },
+    "brain_activity": {
+      "path": "outputs/runs/eon_demo_final/brain/rates.csv",
+      "exists": true,
+      "bytes": 9615,
+      "note": "Partial brain activity artifact exists, but no final video or summary was produced."
+    },
+    "logs": [
+      {
+        "path": "outputs/runs/eon_demo_final/logs/brain_server.jsonl",
+        "exists": true,
+        "bytes": 61
+      },
+      {
+        "path": "outputs/runs/eon_demo_final/trajectory.jsonl",
+        "exists": true
+      },
+      {
+        "path": "outputs/runs/eon_demo_final/control.jsonl",
+        "exists": true
+      },
+      {
+        "path": "outputs/runs/eon_demo_final/arena.jsonl",
+        "exists": true
+      },
+      {
+        "path": "outputs/runs/eon_demo_final/events.jsonl",
+        "exists": true
+      }
+    ],
+    "failure_manifest": {
+      "path": "outputs/runs/eon_demo_final/failure_manifest.json",
+      "exists": true,
+      "bytes": 3901
+    }
+  },
+  "blocker": {
+    "class": "brain subprocess failed while connected to body",
+    "error_code": "p0_brain_process_failed",
+    "details": [
+      "Brian2 emitted Arrow sysctl warnings, then raised a Brian2 unexpected error and ConnectionResetError while the transport waited for the next frame.",
+      "The body subprocess was terminated with returncode -15 after timeout cleanup."
+    ]
+  },
+  "adversarial_classes": [
+    "stale_state",
+    "misleading_success_output",
+    "hung_long_commands",
+    "dirty_worktree",
+    "flaky_tests"
+  ],
+  "cleanup": {
+    "receipt": "Removed the pre-existing outputs/runs/eon_demo_final directory before the run to avoid stale evidence. No source, config, or .omo/plans files were edited. No replay run was launched because the demo did not succeed."
+  },
+  "notes": [
+    "The final demo does not complete end-to-end in the current environment.",
+    "No separate brain activity fallback artifact beyond outputs/runs/eon_demo_final/brain/rates.csv was produced.",
+    "failure_manifest.json remains present in the final run directory."
+  ]
+}

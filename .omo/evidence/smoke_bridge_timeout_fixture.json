@@ -1,0 +1,19 @@
+{
+  "artifacts": [
+    "outputs/smoke/bridge_timeout_fixture/fixture_timeout.json"
+  ],
+  "command": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/python3",
+    "-c",
+    "import time; print('fixture-start', flush=True); time.sleep(30.0)"
+  ],
+  "duration_sec": 1.003778541,
+  "exit_code": 124,
+  "fixture": "sleep",
+  "returncode": -15,
+  "script": "smoke_bridge",
+  "status": "timeout",
+  "stderr": "",
+  "stdout": "fixture-start\n",
+  "timed_out": true
+}

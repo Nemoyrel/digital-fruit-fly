@@ -1,0 +1,83 @@
+{
+  "task": "Todo 9 - deterministic arena geometry, boundaries, sugar cue, and state serialization",
+  "changed_files": [
+    "src/digital_fruit_fly/arena/model.py",
+    "tests/test_arena_model.py",
+    ".omo/evidence/task-9-eon-embodied-fly.json"
+  ],
+  "red_first": {
+    "command": "PYTHONPATH=src python3 -m unittest tests.test_arena_model",
+    "exit_code": 1,
+    "failure": "ModuleNotFoundError: No module named 'digital_fruit_fly.arena.model'"
+  },
+  "tests": [
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_arena_model",
+      "exit_code": 0,
+      "result": "Ran 8 tests in 0.000s - OK"
+    },
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_arena_model",
+      "exit_code": 0,
+      "result": "rerun flaky check passed: Ran 8 tests in 0.000s - OK"
+    }
+  ],
+  "manual_qa": {
+    "fresh_python_one_liner": {
+      "command": "PYTHONPATH=src python3 -c 'create arena, clamp out-of-bound pose, sample cue, serialize to JSON'",
+      "exit_code": 0,
+      "metrics": {
+        "clamped": [60.0, 0.0],
+        "collided": true,
+        "contact": true,
+        "cue": [0.05, 0.029176],
+        "serialized_width_mm": 60.0,
+        "serialized_height_mm": 40.0,
+        "serialized_food_radius_mm": 3.0,
+        "serialized_food_cue_radius_mm": 10.0
+      }
+    },
+    "invalid_config_errors": {
+      "command": "PYTHONPATH=src python3 -c 'build invalid runtime arena configs and print ArenaConfigError'",
+      "exit_code": 0,
+      "errors": [
+        "food.center: must be inside arena bounds",
+        "food.radius_mm: food disk must be fully inside arena",
+        "food.cue_radius_mm: must be greater than food radius"
+      ]
+    },
+    "loc_check": [
+      {
+        "file": "src/digital_fruit_fly/arena/model.py",
+        "pure_loc": 205,
+        "limit": 250
+      },
+      {
+        "file": "tests/test_arena_model.py",
+        "pure_loc": 108,
+        "limit": 250
+      }
+    ],
+    "forbidden_path_diff": {
+      "command": "git diff -- external/drosophila_brain_model reports DESIGN.md",
+      "exit_code": 0,
+      "output": ""
+    }
+  },
+  "adversarial_qa": {
+    "malformed_input": "Food center outside arena, food disk crossing a boundary, and cue radius smaller than food radius all raise ArenaConfigError.",
+    "stale_state": "ArenaGeometry is frozen; helpers derive cue/contact/distance from the supplied pose with no cached mutable state.",
+    "dirty_worktree": "Worktree had broad pre-existing untracked files including DESIGN.md and reports/; this task only changed the owned files listed above.",
+    "flaky_tests": "Focused unittest command passed twice consecutively.",
+    "misleading_success_output": "Fresh one-liner printed numeric clamp/cue/contact metrics and stable JSON-compatible arena serialization after tests passed."
+  },
+  "cleanup_receipts": {
+    "temp_files_created": [],
+    "runtime_resources": "none",
+    "removed": []
+  },
+  "risks": [
+    "ArenaGeometry constructor requires explicit CueSensorGeometry for Python 3.9-compatible frozen slotted dataclasses; build_arena_geometry_from_runtime supplies the default body-facing sensor layout.",
+    "This model is intentionally 2D logical geometry only; FlyGym/MuJoCo/Brian integration remains for later tasks."
+  ]
+}

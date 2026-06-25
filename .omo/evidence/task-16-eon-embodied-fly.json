@@ -1,0 +1,153 @@
+{
+  "kind": "DoneClaim",
+  "task": "Todo 16 - brain-selected body controller adapters",
+  "status": "done",
+  "summary": "Added a dependency-light body controller target planner that maps decoded brain control frames to locomotion, directional proboscis feeding, face grooming, and stop commands without importing FlyGym. Selection is driven only by decoded intensities; arena state is audit-only.",
+  "changed_files": [
+    {
+      "path": "src/digital_fruit_fly/body/controllers.py",
+      "change": "New frozen dataclass/StrEnum controller adapter API, Todo 8 API-report contract parser, ControlFrame decoder, priority-based mode selection, FlyGym demo controller import metadata, directional proboscis target generation, face grooming sweep target generation, stop zero/brake command, typed malformed-frame and missing-food-direction errors.",
+      "pure_loc": 247
+    },
+    {
+      "path": "tests/test_body_controllers.py",
+      "change": "New red-first unittest coverage for locomotion, feeding bearing sign, face grooming, stop, arena-only non-selection, feed/groom conflict priority logging, and missing food-relative direction refusal.",
+      "pure_loc": 203
+    },
+    {
+      "path": ".omo/evidence/task-16-eon-embodied-fly.json",
+      "change": "DoneClaim evidence receipt for Todo 16.",
+      "pure_loc": "not_applicable_json_evidence"
+    }
+  ],
+  "red_green_proof": [
+    {
+      "phase": "red",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_controllers",
+      "exit_code": 1,
+      "evidence": "Ran 7 tests; all errored with ModuleNotFoundError: No module named 'digital_fruit_fly.body.controllers'. This was the expected pre-implementation failure."
+    },
+    {
+      "phase": "green_after_implementation",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_controllers",
+      "exit_code": 0,
+      "evidence": "Ran 7 tests in 0.006s - OK."
+    },
+    {
+      "phase": "green_after_refactor_size_gate",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_controllers",
+      "exit_code": 0,
+      "evidence": "Ran 7 tests in 0.007s - OK."
+    }
+  ],
+  "tests_and_verification": [
+    {
+      "phase": "acceptance_focused",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_controllers",
+      "exit_code": 0,
+      "evidence": "Ran 7 tests in 0.007s - OK. Covers locomotion, directional proboscis feeding, grooming, stop, arena-only non-selection, configured feed/groom conflict priority audit, and missing food direction typed refusal."
+    },
+    {
+      "phase": "syntax_compile",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m py_compile src/digital_fruit_fly/body/controllers.py tests/test_body_controllers.py",
+      "exit_code": 0,
+      "evidence": "Both touched Python files compiled."
+    },
+    {
+      "phase": "strict_no_excuse_checker",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python /Users/lins/.codex/plugins/cache/sisyphuslabs/omo/4.13.0/skills/programming/scripts/python/check-no-excuse-rules.py src/digital_fruit_fly/body/controllers.py tests/test_body_controllers.py",
+      "exit_code": 0,
+      "evidence": "no violations in 2 file(s)"
+    },
+    {
+      "phase": "loc_size_gate",
+      "command": "awk 'FNR == 1 { if (NR > 1) print previous, count; previous = FILENAME; count = 0 } !/^[[:space:]]*$/ && !/^[[:space:]]*#/ { count++ } END { print previous, count }' src/digital_fruit_fly/body/controllers.py tests/test_body_controllers.py",
+      "exit_code": 0,
+      "evidence": {
+        "src/digital_fruit_fly/body/controllers.py": 247,
+        "tests/test_body_controllers.py": 203
+      }
+    }
+  ],
+  "manual_qa_artifact": {
+    "type": "command_stdout",
+    "command": "/opt/miniconda3/envs/flygym_env/bin/python - <<'PY' manual controller QA snippet PY",
+    "exit_code": 0,
+    "stdout": "manual_qa_ok yaw_pos=0.360000 yaw_neg=-0.360000 conflict=feeding:configured_priority:feeding,grooming stop=stop:brake=True:zeroed=126 missing=MissingFoodDirection:1.0",
+    "asserted_facts": [
+      "Positive food-relative bearing produces positive c_head-c_rostrum-yaw target.",
+      "Negative food-relative bearing produces negative c_head-c_rostrum-yaw target.",
+      "Configured priority selects feeding over grooming and logs configured_priority plus conflict modes.",
+      "Stop command sets brake=True and zeroes 126 actuator targets from the Todo 8 report.",
+      "Directional feeding without food_relative raises MissingFoodDirection instead of reusing stale direction."
+    ]
+  },
+  "failure_qa": [
+    {
+      "scenario": "feeding_and_grooming_both_above_threshold",
+      "proof": "tests.test_body_controllers.TestBodyControllers.test_feed_groom_conflict_uses_configured_priority_and_logs_tie_break passed; manual QA printed conflict=feeding:configured_priority:feeding,grooming."
+    },
+    {
+      "scenario": "feeding_without_food_relative_direction",
+      "proof": "tests.test_body_controllers.TestBodyControllers.test_feeding_without_food_relative_direction_refuses_stale_direction passed; manual QA printed missing=MissingFoodDirection:1.0."
+    }
+  ],
+  "cleanup_receipt": {
+    "debug_markers": {
+      "command": "rg -n \"breakpoint\\(|pdb\\.|pdb.set_trace|debugger|TODO DEBUG|DEBUG:|HACK|XXX|print\\(\" src/digital_fruit_fly/body/controllers.py tests/test_body_controllers.py",
+      "exit_code": 1,
+      "interpretation": "rg exit 1 means no debug marker matches."
+    },
+    "debug_journal": {
+      "command": "find . -name .debug-journal.md -print",
+      "exit_code": 0,
+      "stdout": ""
+    },
+    "process_check": {
+      "sandbox_attempt": {
+        "command": "pgrep -fl 'smoke_body.py|digital_fruit_fly.body.flygym_probe|mujoco|flygym'",
+        "exit_code": 3,
+        "evidence": "sysmon request failed with error: sysmond service not found; pgrep: Cannot get process list"
+      },
+      "escalated_read_only_check": {
+        "command": "pgrep -fl 'smoke_body.py|digital_fruit_fly.body.flygym_probe|mujoco|flygym'",
+        "exit_code": 1,
+        "stdout": "",
+        "interpretation": "pgrep exit 1 means no matching FlyGym/smoke/MuJoCo processes."
+      },
+      "flygym_spawned_by_task": false
+    },
+    "protected_file_diff_check": {
+      "command": "git diff -- .omo/plans/eon-embodied-fly.md scripts/smoke_body.py src/digital_fruit_fly/body/rendering.py src/digital_fruit_fly/body/observations.py",
+      "exit_code": 0,
+      "stdout": "",
+      "interpretation": "No tracked diff was introduced in the plan, smoke body, rendering/camera-adjacent, or observation files."
+    },
+    "generated_artifacts": "No runtime output artifacts were intentionally written. Python __pycache__ files may be present from normal unittest/py_compile execution and were left untouched to avoid deleting pre-existing workspace caches."
+  },
+  "adversarial_qa": {
+    "malformed_input": "Malformed control payload paths are typed through MalformedControlFrame; acceptance explicitly covers missing food_relative with MissingFoodDirection.",
+    "stale_state": "Feeding uses only the current DecodedControl.food_direction. The missing-direction test first executes a valid feeding frame, then proves the next directionless frame raises instead of reusing stale direction.",
+    "dirty_worktree": "Initial worktree was broadly untracked. This task edited only src/digital_fruit_fly/body/controllers.py, tests/test_body_controllers.py, and .omo/evidence/task-16-eon-embodied-fly.json. Plan checkbox, Boulder state, smoke_body.py, camera/rendering, observations.py, and API probe files were not edited.",
+    "hung_long_commands": "All commands returned; the only sandbox failure was read-only process listing, rerun with escalation and no matching processes.",
+    "flaky_tests": "The focused unittest command passed after implementation and again after the size refactor.",
+    "misleading_success_output": "Manual QA parsed command objects and printed concrete actuator/audit facts instead of relying on OK output alone.",
+    "prompt_injection": "Not applicable; no prompt-bearing external data was introduced.",
+    "cancel_resume": "Not applicable; no cancellation or resume state was introduced.",
+    "repeated_interruptions": "Not applicable; no interruption-handling path was introduced."
+  },
+  "post_write_review": {
+    "single_responsibility": "src/digital_fruit_fly/body/controllers.py owns body controller target planning; tests/test_body_controllers.py owns focused controller adapter behavior coverage.",
+    "boundary_purity": "ControlFrame payloads and API-report JSON are parsed into frozen dataclasses or typed errors before controller logic uses them.",
+    "variant_discrimination": "ControllerMode selection dispatch and intensity handling use exhaustive match with assert_never.",
+    "escape_hatches": "No public Any, cast, type-ignore, broad except, debug print, breakpoint, or SIZE_OK waiver was added.",
+    "defensive_layer": "No arena cue can select behavior mode; arena values are retained only in audit metadata.",
+    "parameter_bloat": "Helper parameter bloat found during review was removed; remaining helper functions have no more than 3 parameters.",
+    "tests": "All introduced behavior is covered by tests that failed before controllers.py existed."
+  },
+  "risks": [
+    "The live FlyGym controller is represented as installed import-path metadata and low-level target maps, per task constraint to avoid importing FlyGym in controllers.py. Body server execution of those metadata targets remains future integration work.",
+    "Grooming and proboscis targets are deterministic primitives against Todo 8 DOF names; they are not yet physically validated in a live MuJoCo simulation.",
+    "Only the focused Todo 16 controller suite was run. Full project tests span conflicting brain/body conda environments and were outside this scoped controller adapter task."
+  ]
+}

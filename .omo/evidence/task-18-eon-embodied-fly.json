@@ -1,0 +1,183 @@
+{
+  "task": "Todo 18: body server process",
+  "status": "done",
+  "created_at_local": "2026-06-25T00:00:00+08:00",
+  "updated_at_local": "2026-06-25T00:45:00+08:00",
+  "plan_checkbox_marked": false,
+  "verifier_needs_fix": {
+    "root_cause": "Fixture mode previously advanced only the local deterministic 2D pose/dust model. The manifest hard-coded flygym_live=false and simulation_backend=deterministic_body_fixture, so row counts passed without initializing or stepping FlyGym/NeuroMechFly.",
+    "addressed_by": "Added a live FlyGym runtime adapter that constructs Fly(name='nmf'), Skeleton(ALL_BIOLOGICAL, PITCH_ROLL_YAW), FlatGroundWorld, and flygym.Simulation; each body tick writes position-actuator inputs, calls sim.step(), and records live MuJoCo/FlyGym observation facts in arena.jsonl and manifest.json."
+  },
+  "changed_files": [
+    "src/digital_fruit_fly/body/server.py",
+    "src/digital_fruit_fly/body/server_types.py",
+    "src/digital_fruit_fly/body/server_loop.py",
+    "src/digital_fruit_fly/body/server_artifacts.py",
+    "src/digital_fruit_fly/body/server_flygym.py",
+    "tests/test_body_server.py",
+    ".omo/evidence/task-18-eon-embodied-fly.json",
+    "outputs/smoke/body_server/"
+  ],
+  "scope_note": "No Todo 16/17 modules, protected external/reports/DESIGN.md, plan, or Boulder files were edited. scripts/run_body.py was not changed.",
+  "red_green_proof": {
+    "red": {
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_server",
+      "exit_code": 1,
+      "proof": "After adding test_fixture_mode_writes_live_flygym_tick_artifacts_when_run_standalone, the existing implementation failed at self.assertTrue(manifest['flygym_live']) with AssertionError: False is not true. Ran 3 tests in 0.203s; FAILED (failures=1)."
+    },
+    "green": [
+      {
+        "command": "/opt/miniconda3/envs/flygym_env/bin/python -m unittest tests.test_body_server",
+        "exit_code": 0,
+        "proof": "Ran 3 tests in 1.207s: OK."
+      },
+      {
+        "command": "/opt/miniconda3/envs/flygym_env/bin/python scripts/run_body.py --config configs/bridge_smoke.yaml --brain-mode fixture --max-ticks 20 --output outputs/smoke/body_server",
+        "exit_code": 0,
+        "proof": "stdout status ok, ticks 20, manifest_path outputs/smoke/body_server/manifest.json."
+      }
+    ],
+    "runtime_probe_before_fix": {
+      "command": "bounded flygym_env Python probe constructing Fly/FlatGroundWorld/Simulation and stepping all-biological position actuators",
+      "exit_code": 0,
+      "proof": "FlyGym 2.0.2 and MuJoCo 3.6.0 initialized; after one step model_nq=133, model_nv=132, model_nu=126, actuator_count=126, joint_angles_shape=(126,), site_positions_shape=(68,3), body_positions_shape=(69,3), model_time_s=0.0001."
+    }
+  },
+  "acceptance_artifacts": {
+    "output_dir": "outputs/smoke/body_server",
+    "manifest": "outputs/smoke/body_server/manifest.json",
+    "trajectory": "outputs/smoke/body_server/trajectory.jsonl",
+    "control": "outputs/smoke/body_server/control.jsonl",
+    "arena": "outputs/smoke/body_server/arena.jsonl",
+    "recording_metadata": "outputs/smoke/body_server/video/body_server.metadata.json",
+    "fallback_frame_dir": "outputs/smoke/body_server/video/body_server_frames",
+    "first_fallback_frame": "outputs/smoke/body_server/video/body_server_frames/frame_0000.ppm",
+    "parsed": {
+      "manifest_status": "ok",
+      "manifest_ticks": 20,
+      "flygym_live": true,
+      "simulation_backend": "FlyGym/NeuroMechFly live Simulation position-actuator stepping",
+      "flygym_live_step_count": 20,
+      "flygym_version": "2.0.2",
+      "mujoco_version": "3.6.0",
+      "model_nq": 133,
+      "model_nv": 132,
+      "model_nu": 126,
+      "actuator_count": 126,
+      "trajectory_rows": 20,
+      "control_rows": 20,
+      "arena_rows": 20,
+      "events_rows": 2,
+      "last_step_index": 19,
+      "last_step_shapes": {
+        "joint_angles": [
+          126
+        ],
+        "site_positions": [
+          68,
+          3
+        ],
+        "body_positions": [
+          69,
+          3
+        ]
+      },
+      "recording_status": "fallback_frames",
+      "recording_frame_count": 20,
+      "fallback_frame_count": 20,
+      "recording_metadata_exists": true
+    }
+  },
+  "qa_failure_paths": [
+    {
+      "name": "no brain reachable",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python scripts/run_body.py --config configs/bridge_smoke.yaml --brain-mode connect --brain-port 9 --timeout-sec 0.2 --max-ticks 20 --output outputs/smoke/body_server/no_brain",
+      "exit_code": 1,
+      "artifact": "outputs/smoke/body_server/no_brain/manifest.json",
+      "proof": {
+        "status": "error",
+        "ticks": 0,
+        "error_code": "brain_unreachable",
+        "flygym_live": false,
+        "backend": "FlyGym/NeuroMechFly live stepping not completed"
+      }
+    },
+    {
+      "name": "invalid brain mode",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python scripts/run_body.py --config configs/bridge_smoke.yaml --brain-mode invalid --max-ticks 20 --output outputs/smoke/body_server/invalid_mode",
+      "exit_code": 2,
+      "artifact": "outputs/smoke/body_server/invalid_mode/manifest.json",
+      "proof": {
+        "status": "error",
+        "error_code": "configuration_error"
+      }
+    },
+    {
+      "name": "bad max ticks",
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python scripts/run_body.py --config configs/bridge_smoke.yaml --brain-mode fixture --max-ticks 0 --output outputs/smoke/body_server/bad_ticks",
+      "exit_code": 2,
+      "artifact": "outputs/smoke/body_server/bad_ticks/manifest.json",
+      "proof": {
+        "status": "error",
+        "error_code": "configuration_error"
+      }
+    }
+  ],
+  "source_scans": [
+    {
+      "command": "rg -n -i 'import brian2|from brian2|shiu_adapter|drosophila_brain_model' src/digital_fruit_fly/body/server.py src/digital_fruit_fly/body/server_types.py src/digital_fruit_fly/body/server_motion.py src/digital_fruit_fly/body/server_peer.py src/digital_fruit_fly/body/server_loop.py src/digital_fruit_fly/body/server_artifacts.py src/digital_fruit_fly/body/server_flygym.py scripts/run_body.py",
+      "exit_code": 1,
+      "proof": "No forbidden body-process brain imports matched."
+    },
+    {
+      "command": "rg -n 'breakpoint\\(|pdb\\.set_trace|debugger' src/digital_fruit_fly/body/server.py src/digital_fruit_fly/body/server_types.py src/digital_fruit_fly/body/server_motion.py src/digital_fruit_fly/body/server_peer.py src/digital_fruit_fly/body/server_loop.py src/digital_fruit_fly/body/server_artifacts.py src/digital_fruit_fly/body/server_flygym.py scripts/run_body.py tests/test_body_server.py",
+      "exit_code": 1,
+      "proof": "No debug markers matched."
+    },
+    {
+      "command": "rg -n 'deterministic_body_fixture|flygym_live\"\\s*:\\s*false|flygym_live=False' src/digital_fruit_fly/body/server.py src/digital_fruit_fly/body/server_types.py src/digital_fruit_fly/body/server_motion.py src/digital_fruit_fly/body/server_peer.py src/digital_fruit_fly/body/server_loop.py src/digital_fruit_fly/body/server_artifacts.py src/digital_fruit_fly/body/server_flygym.py scripts/run_body.py outputs/smoke/body_server/manifest.json",
+      "exit_code": 1,
+      "proof": "No stale deterministic backend or false live manifest markers matched in body server sources or main smoke manifest."
+    }
+  ],
+  "cleanup_receipt": {
+    "stale_state": "outputs/smoke/body_server was removed before the acceptance run and regenerated with a live FlyGym manifest.",
+    "hung_processes": "An earlier in-process unittest hang produced macOS service log PID 82754; it was terminated with kill 82754 (exit 0) before continuing. Final focused tests and acceptance commands exited normally.",
+    "ports": [
+      {
+        "command": "lsof -nP -iTCP:50181 -sTCP:LISTEN",
+        "exit_code": 1,
+        "proof": "No listener output."
+      },
+      {
+        "command": "lsof -nP -iTCP:50182 -sTCP:LISTEN",
+        "exit_code": 1,
+        "proof": "No listener output."
+      }
+    ],
+    "exec_sessions": "No long-running exec_command sessions remained active after final commands returned."
+  },
+  "compile_and_loc": {
+    "py_compile": {
+      "command": "/opt/miniconda3/envs/flygym_env/bin/python -m py_compile src/digital_fruit_fly/body/server.py src/digital_fruit_fly/body/server_types.py src/digital_fruit_fly/body/server_motion.py src/digital_fruit_fly/body/server_peer.py src/digital_fruit_fly/body/server_loop.py src/digital_fruit_fly/body/server_artifacts.py src/digital_fruit_fly/body/server_flygym.py scripts/run_body.py tests/test_body_server.py",
+      "exit_code": 0,
+      "proof": "No py_compile output."
+    },
+    "pure_loc": {
+      "src/digital_fruit_fly/body/server.py": 50,
+      "src/digital_fruit_fly/body/server_types.py": 102,
+      "src/digital_fruit_fly/body/server_motion.py": 227,
+      "src/digital_fruit_fly/body/server_peer.py": 149,
+      "src/digital_fruit_fly/body/server_loop.py": 67,
+      "src/digital_fruit_fly/body/server_artifacts.py": 131,
+      "src/digital_fruit_fly/body/server_flygym.py": 172,
+      "scripts/run_body.py": 77,
+      "tests/test_body_server.py": 87
+    }
+  },
+  "risks": [
+    "The trajectory/control/arena domain rows still include the existing project deterministic 2D pose and fallback PPM recording frames, but the backend acceptance is now gated by real FlyGym/NeuroMechFly Simulation initialization and one sim.step() per tick.",
+    "Connect mode still requires a compatible running brain server for a successful full bridge run; unreachable brain remains a structured error path.",
+    "The adapter imports FlyGym inside the body process only and does not import Brian2 or Shiu modules."
+  ]
+}

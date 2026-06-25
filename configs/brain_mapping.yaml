@@ -1,0 +1,134 @@
+{
+  "schema_version": "1.0.0",
+  "mapping_version": "2026-06-24.task-11",
+  "brian_model": {
+    "source": "philshiu/Drosophila_brain_model local checkout",
+    "preferred_completeness_version": "630",
+    "brain_index_rule": "Brian index is enumerate(pd.read_csv(path_comp, index_col=0).index), matching external/drosophila_brain_model/model.py."
+  },
+  "sensory_channels": [
+    {
+      "channel_name": "sugar_grn",
+      "flywire_ids": [
+        720575940624963786,
+        720575940630233916,
+        720575940637568838,
+        720575940638202345,
+        720575940617000768,
+        720575940630797113,
+        720575940632889389,
+        720575940621754367,
+        720575940621502051,
+        720575940640649691,
+        720575940639332736,
+        720575940616885538,
+        720575940639198653,
+        720575940620900446,
+        720575940617937543,
+        720575940632425919,
+        720575940633143833,
+        720575940612670570,
+        720575940628853239,
+        720575940629176663,
+        720575940611875570
+      ],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "excitatory",
+      "normalization": "clip arena sugar cue to 0..1, then map to Poisson drive Hz downstream",
+      "biologically_curated": true,
+      "provisional": false,
+      "source_status": "curated_from_shiu_example_neu_sugar",
+      "rationale": "Direct sugar GRN target list extracted from external/drosophila_brain_model/example.ipynb by Todo 6."
+    },
+    {
+      "channel_name": "dust_load",
+      "flywire_ids": [720575940596125868, 720575940597856265],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "excitatory",
+      "normalization": "clip dust load / threshold to 0..1",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Placeholder mechanosensory-like input targets selected from resolvable Shiu 630 rows until a curated dust-sensing cell set is chosen."
+    },
+    {
+      "channel_name": "left_mechanosensory",
+      "flywire_ids": [720575940597944841, 720575940598267657],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "excitatory",
+      "normalization": "clip left contact or load signal to 0..1",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Placeholder left body mechanosensory drive; IDs are not biological claims and must be replaced by curated FlyWire targets."
+    },
+    {
+      "channel_name": "right_mechanosensory",
+      "flywire_ids": [720575940599333574, 720575940599457990],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "excitatory",
+      "normalization": "clip right contact or load signal to 0..1",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Placeholder right body mechanosensory drive; IDs are not biological claims and must be replaced by curated FlyWire targets."
+    }
+  ],
+  "motor_readout_groups": [
+    {
+      "channel_name": "forward",
+      "flywire_ids": [720575940599459782, 720575940599704006, 720575940599729862],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "positive_readout",
+      "normalization": "mean rate z-score then decoder locomotion threshold",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Engineering readout group for forward intent; selected only for Shiu 630 resolvability pending descending-neuron curation."
+    },
+    {
+      "channel_name": "turn",
+      "flywire_ids": [720575940599733446, 720575940599738284, 720575940599755718],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "signed_readout",
+      "normalization": "left-right differential rate z-score then decoder turn threshold",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Engineering readout group for turning intent; not a curated lateralized motor population."
+    },
+    {
+      "channel_name": "feed",
+      "flywire_ids": [720575940599763910, 720575940599797164, 720575940600071689],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "positive_readout",
+      "normalization": "mean rate z-score then decoder feeding threshold",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Engineering readout group for feeding intent until proboscis/feeding command neurons are curated."
+    },
+    {
+      "channel_name": "groom",
+      "flywire_ids": [720575940600084489, 720575940600101641, 720575940600124169],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "positive_readout",
+      "normalization": "mean rate z-score then decoder grooming threshold",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Engineering readout group for grooming intent until dust-triggered grooming circuits are curated."
+    },
+    {
+      "channel_name": "stop",
+      "flywire_ids": [720575940600143369, 720575940600150793, 720575940600433181],
+      "brain_index_resolution_status": "pending_validation",
+      "sign": "inhibitory_readout",
+      "normalization": "mean rate z-score then decoder stop threshold",
+      "biologically_curated": false,
+      "provisional": true,
+      "source_status": "engineering_provisional_resolvable_shiu_630",
+      "rationale": "Engineering readout group for locomotor stop/suppression; not yet tied to curated stopping command neurons."
+    }
+  ]
+}

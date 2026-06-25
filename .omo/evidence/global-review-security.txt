@@ -1,0 +1,55 @@
+Global review lane 4 - Security audit
+Verdict: PASS
+
+Blocking issues: none.
+
+Scope reviewed:
+- scripts/run_demo.py
+- src/digital_fruit_fly/demo/
+- src/digital_fruit_fly/bridge/messages.py, transport.py, replay.py, fixture_run.py
+- src/digital_fruit_fly/runtime/config.py, timeouts.py, run_manifest.py, logging.py
+- subprocess entrypoints/scripts and body/brain server artifact paths relevant to the demo
+- configs/eon_demo.yaml, configs/bridge_smoke.yaml
+- generated .omo/evidence and outputs for obvious credential/token leakage
+
+Security findings:
+
+MEDIUM - Output/evidence paths are not consistently root-guarded.
+- Canonical run artifacts created through create_run_layout() are root-checked before directory creation. The guard accepts paths containing an "outputs" segment or ".omo/evidence" and rejects paths containing "reports" or "external".
+- The guard is string-segment based and does not resolve paths before checking containment, so a path such as outputs/../../somewhere can satisfy the "outputs" segment test while resolving outside outputs.
+- Several wrapper paths bypass create_run_layout() entirely and write via write_json_evidence(), including demo success/failure manifests and explicit --evidence paths.
+- Stale artifact cleanup in src/digital_fruit_fly/demo/process_run.py unlinks fixed filenames under user-supplied output_dir before any output-root guard runs.
+- Fixture/demo camera helpers can unlink or write fixed names under caller-supplied directories. body_video.py also accepts a direct --stem parameter, which could include path separators if that script is invoked directly.
+- Impact is bounded by local user filesystem permissions and CLI invocation control; no privilege escalation or remote attack path was found. This should still be tightened by resolving output/evidence paths against approved roots and rejecting traversal/symlinks where appropriate.
+
+LOW - Local JSON/JSONL replay readers can consume large artifact files.
+- Bridge transport enforces MAX_FRAME_BYTES=1,048,576 for socket frames and closes on oversized frames.
+- Replay file loading reads frames.jsonl fully into memory and then decodes each line. This is acceptable for trusted local artifacts but can be used for local resource exhaustion if pointed at very large files.
+- JSON parsing rejects NaN/Infinity for bridge messages, validates object/field types, enforces finite numeric payload values, rejects behavior shortcut payload keys, and verifies payload checksums.
+
+LOW - Local socket bind host is config-controlled.
+- Default configs use 127.0.0.1.
+- Config validation only requires a non-empty host; run_brain.py can bind to a broader interface if the trusted local config is changed.
+- For a local scientific CLI this is not a blocker, but production-like use should restrict or explicitly acknowledge non-loopback binds.
+
+LOW - Child process stdout/stderr are persisted in failure manifests.
+- Subprocess command execution uses tuple argv and shell=False defaults. No shell=True use was found in reviewed source.
+- The subprocess helper captures stdout/stderr and writes them to JSON evidence/manifests. The project does not dump the process environment, but a child process that prints a secret would have that output persisted.
+- Current generated evidence reviewed did not contain raw credentials/tokens.
+
+Confirmed controls:
+- No command injection path found in reviewed subprocess orchestration. Commands are constructed as tuples and passed to subprocess.Popen without shell=True.
+- Configured brain/body Python paths are constrained by runtime/config.py to the README default interpreter paths.
+- Process cleanup uses start_new_session=True and process-group SIGTERM/SIGKILL fallbacks in runtime/timeouts.py and demo/process_children.py. Final QA evidence reports children_alive_after_cleanup=[] for the blocked demo run.
+- Canonical run manifests avoid environment dumps. They record artifact paths, command argv, stdout/stderr, versions, process ids/return codes, and simulation metadata, but not os.environ.
+- Secret scan over .omo/evidence, outputs, configs, scripts, and src found no obvious raw API keys, tokens, private keys, passwords, or credentials.
+- No broad destructive delete such as rmtree was found in reviewed product code. Deletes are fixed artifact names or frame_*.ppm cleanup under caller-supplied output directories.
+
+Evidence commands run:
+- rg --files scripts src configs tests .omo/evidence
+- rg for subprocess/shell/path/write/delete/env/secret-related patterns across scripts, src, configs, and .omo/evidence
+- nl/sed review of the scoped Python files listed above
+- rg credential/token pattern scan across .omo/evidence, outputs, configs, scripts, and src
+
+PASS rationale:
+No CRITICAL or HIGH security issue was identified. The main security debt is inconsistent output-root enforcement/path traversal resistance for local CLI artifact paths; this is documented as MEDIUM because exploitation requires control of local CLI arguments/config/artifact paths and runs with the invoking user's normal filesystem permissions.

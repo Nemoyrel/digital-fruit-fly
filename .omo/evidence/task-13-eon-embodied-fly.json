@@ -1,0 +1,205 @@
+{
+  "task": "Todo 13 - brain server process and brain logs",
+  "status": "done",
+  "commands": [
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_server",
+      "exit_code": 1,
+      "purpose": "failing-first server tests before implementation",
+      "evidence": "ModuleNotFoundError: No module named 'digital_fruit_fly.brain.server'"
+    },
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_server",
+      "exit_code": 1,
+      "purpose": "failing-first malformed handshake regression",
+      "evidence": "OSError: [Errno 9] Bad file descriptor when replying after malformed decoded ErrorFrame closed transport"
+    },
+    {
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_brain_server tests.test_bridge_messages tests.test_transport",
+      "exit_code": 0,
+      "purpose": "focused brain server plus bridge message/transport regression tests",
+      "evidence": "Ran 16 tests in 0.070s - OK"
+    },
+    {
+      "command": "/opt/miniconda3/envs/brain_env/bin/python scripts/run_brain.py --config configs/bridge_smoke.yaml --mode fixture --max-ticks 5 --output outputs/smoke/brain_server",
+      "exit_code": 0,
+      "purpose": "brain_env acceptance server command",
+      "evidence": {
+        "status": "shutdown",
+        "ticks": 5,
+        "run_dir": "outputs/smoke/brain_server",
+        "rates_path": "outputs/smoke/brain_server/brain/rates.csv",
+        "events_path": "outputs/smoke/brain_server/events.jsonl"
+      }
+    },
+    {
+      "command": "PYTHONPATH=src python3 scripts/smoke_bridge.py --config configs/bridge_smoke.yaml --ticks 5 --output outputs/smoke/brain_bridge_client --brain-client",
+      "exit_code": 0,
+      "purpose": "bounded smoke_bridge client handshake with brain server",
+      "evidence": {
+        "status": "ok",
+        "mode": "brain_client",
+        "ticks": 5,
+        "artifact": "outputs/smoke/brain_bridge_client/brain_frames.jsonl"
+      }
+    },
+    {
+      "command": "PYTHONPATH=src python3 scripts/smoke_bridge.py --config configs/bridge_smoke.yaml --ticks 3 --output outputs/smoke/bridge_unit",
+      "exit_code": 0,
+      "purpose": "preserve existing Todo 5 fixture-only bridge smoke behavior",
+      "evidence": {
+        "status": "ok",
+        "ticks": 3,
+        "artifacts": [
+          "outputs/smoke/bridge_unit/frames.jsonl",
+          "outputs/smoke/bridge_unit/summary.json"
+        ]
+      }
+    },
+    {
+      "command": "skipped frame probe against fixture server at outputs/smoke/brain_server/skip",
+      "exit_code": 1,
+      "purpose": "failure QA for skipped frame index",
+      "evidence": {
+        "client_response": {
+          "type": "ErrorFrame",
+          "code": "frame_index_skipped",
+          "message": "expected 0"
+        },
+        "server_status": "protocol_error",
+        "events_path": "outputs/smoke/brain_server/skip/events.jsonl"
+      }
+    },
+    {
+      "command": "pure LOC check for scripts/run_brain.py src/digital_fruit_fly/brain/server.py tests/test_brain_server.py scripts/smoke_bridge.py",
+      "exit_code": 0,
+      "purpose": "project file size guard",
+      "evidence": {
+        "scripts/run_brain.py": 61,
+        "src/digital_fruit_fly/brain/server.py": 248,
+        "tests/test_brain_server.py": 142,
+        "scripts/smoke_bridge.py": 238
+      }
+    },
+    {
+      "command": "python3 port bind check for 127.0.0.1:50181",
+      "exit_code": 0,
+      "purpose": "cleanup check when lsof/pgrep were unavailable",
+      "evidence": {
+        "port": 50181,
+        "bind_check": "free"
+      }
+    },
+    {
+      "command": "git -C external/drosophila_brain_model status --short",
+      "exit_code": 0,
+      "purpose": "nested external repo provenance check requested after verifier needs-human-review",
+      "evidence": {
+        "stdout": " M example.ipynb",
+        "dirty_files": [
+          "example.ipynb"
+        ],
+        "external_repo_modified_by_task": false
+      }
+    },
+    {
+      "command": "git -C external/drosophila_brain_model diff --stat -- example.ipynb && git -C external/drosophila_brain_model diff -- example.ipynb | shasum -a 256",
+      "exit_code": 0,
+      "purpose": "current nested external dirty diff fingerprint",
+      "evidence": {
+        "diff_stat": "example.ipynb | 16 +++++++++++-----\n1 file changed, 11 insertions(+), 5 deletions(-)",
+        "diff_hash_sha256": "72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4"
+      }
+    }
+  ],
+  "artifacts": {
+    "acceptance_rates": {
+      "path": "outputs/smoke/brain_server/brain/rates.csv",
+      "rows": 25,
+      "first_row": {
+        "frame_index": "0",
+        "simulation_time_s": "0.0",
+        "readout": "forward",
+        "rate_hz": "11.0",
+        "spike_delta": "0"
+      }
+    },
+    "brain_frames": {
+      "path": "outputs/smoke/brain_bridge_client/brain_frames.jsonl",
+      "count": 5,
+      "types": [
+        "brain_frame"
+      ]
+    },
+    "protocol_error": {
+      "path": "outputs/smoke/brain_server/skip/events.jsonl",
+      "records": [
+        {
+          "kind": "protocol_error",
+          "code": "frame_index_skipped",
+          "message": "expected 0",
+          "details": {
+            "received_frame_index": 1
+          }
+        }
+      ]
+    }
+  },
+  "adversarial_qa": {
+    "malformed_input": "Covered by tests.test_brain_server malformed handshake test; server logs protocol error and avoids writing to a closed transport.",
+    "stale_state": "Rates CSV is rewritten on each brain server start; evidence uses parsed latest acceptance artifacts. Existing events.jsonl may append prior attempts by run-manifest design.",
+    "dirty_worktree": "Repository already contains many untracked project files; Todo 13 edits stayed within the owned scope. Nested external status is M example.ipynb, matching Todo 6 recorded pre-existing provenance and current diff hash 72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4.",
+    "hung_long_commands": "Server processes were bounded by timeout-sec and all exec sessions were collected before completion.",
+    "flaky_tests": "Focused tests use loopback port 0 for unit server cases and no sleeps.",
+    "misleading_success_output": "Acceptance success was verified by server exit JSON, bridge client JSON, rates CSV row count, brain frame count, and port cleanup bind check."
+  },
+  "external_repo_provenance": {
+    "external_repo_modified_by_task": false,
+    "current_status_command": "git -C external/drosophila_brain_model status --short",
+    "current_status_stdout": " M example.ipynb",
+    "dirty_files": [
+      "example.ipynb"
+    ],
+    "current_diff_stat": "example.ipynb | 16 +++++++++++-----\n1 file changed, 11 insertions(+), 5 deletions(-)",
+    "current_diff_hash_sha256": "72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4",
+    "todo_6_evidence_reference": ".omo/evidence/task-6-eon-embodied-fly.json",
+    "todo_6_recorded_fields": {
+      "cleanup.external_repo_dirty": true,
+      "cleanup.external_repo_dirty_files": [
+        "example.ipynb"
+      ],
+      "cleanup.external_repo_modified_by_task": false,
+      "nested_shiu_repo_status.stdout": " M example.ipynb",
+      "nested_shiu_notebook_diff_stat.stdout": "example.ipynb | 16 +++++++++++-----\n1 file changed, 11 insertions(+), 5 deletions(-)",
+      "nested_shiu_notebook_diff_numstat.stdout": "11\t5\texample.ipynb",
+      "nested_shiu_notebook_diff_hash.stdout": "72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4  -",
+      "mtime_provenance_check.external_example_ipynb": "1782280778 Jun 24 13:59:38 2026"
+    },
+    "todo_13_write_scope": [
+      "scripts/run_brain.py",
+      "src/digital_fruit_fly/brain/server.py",
+      "tests/test_brain_server.py",
+      "scripts/smoke_bridge.py",
+      ".omo/evidence/task-13-eon-embodied-fly.json",
+      "outputs/smoke/brain_server/**",
+      "outputs/smoke/brain_bridge_client/**",
+      "outputs/smoke/bridge_unit/**"
+    ],
+    "basis": [
+      "Current nested repo status still reports only M example.ipynb.",
+      "Current nested diff stat/hash match Todo 6 recorded values.",
+      "Todo 6 recorded example.ipynb mtime as Jun 24 13:59:38 2026 and assessed the nested dirty state as pre-existing.",
+      "No Todo 13 production, test, smoke, or evidence-generation command edited files under external/drosophila_brain_model.",
+      "Todo 13 changed files are only run_brain/server/test/smoke_bridge/evidence/output artifacts."
+    ]
+  },
+  "cleanup": {
+    "server_processes": "All run_brain exec sessions exited.",
+    "port_50181": "free",
+    "notes": "lsof/pgrep were unavailable in sandbox with sysmond errors, so cleanup was verified by direct socket bind."
+  },
+  "risks_blockers": [
+    "Brian2 mode is wired to the existing TickableBrainNetwork/Shiu adapter but was not executed in this task; acceptance and tests use deterministic fixture mode as requested.",
+    "src/digital_fruit_fly/brain/server.py is in the 200-250 LOC warning band at 248 pure LOC; split before adding more behavior."
+  ]
+}

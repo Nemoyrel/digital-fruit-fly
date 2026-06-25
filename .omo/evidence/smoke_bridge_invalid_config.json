@@ -1,0 +1,7 @@
+{
+  "error": "configs/missing_bridge_smoke.yaml: config file does not exist",
+  "exit_code": 2,
+  "script": "smoke_bridge",
+  "status": "failed",
+  "unknown_args": []
+}

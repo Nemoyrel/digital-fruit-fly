@@ -1,0 +1,96 @@
+{
+  "task": "Todo 3 - Define run manifests, output layout, and evidence logging",
+  "timestamp_local": "2026-06-24",
+  "commands": [
+    {
+      "name": "red_failing_first",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_run_manifest",
+      "exit_code": 1,
+      "result": "Failed before production implementation because digital_fruit_fly.runtime.logging did not exist."
+    },
+    {
+      "name": "green_unit",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_run_manifest",
+      "exit_code": 0,
+      "result": "Ran 4 tests in 0.007s; OK."
+    },
+    {
+      "name": "flaky_tests_rerun",
+      "command": "PYTHONPATH=src python3 -m unittest tests.test_run_manifest",
+      "exit_code": 0,
+      "result": "Ran 4 tests in 0.006s; OK."
+    },
+    {
+      "name": "manual_probe_quoting_attempt",
+      "command": "PYTHONPATH=src python3 -c \"...manual probe with escaped newlines...\"",
+      "exit_code": 1,
+      "result": "Shell quoting produced SyntaxError before product code executed; rerun with here-doc below."
+    },
+    {
+      "name": "manual_probe_tempdir",
+      "command": "PYTHONPATH=src python3 - <<'PY' ... PY",
+      "exit_code": 0,
+      "result": "Created temp outputs/runs/manual_manifest_probe, parsed manifest and JSONL from disk, verified reports refusal, then cleaned temp directory."
+    },
+    {
+      "name": "git_status",
+      "command": "git status --short",
+      "exit_code": 0,
+      "result": "Worktree was already dirty; owned Todo 3 paths are present among untracked project paths. Final status also showed non-owned configs/ and bridge files, which this task did not edit."
+    }
+  ],
+  "manual_qa": {
+    "created_temp_paths": [
+      "/var/folders/tn/blwjzw0n52z91875lgrh0t240000gn/T/tmp1si0rpbp/outputs/runs/manual_manifest_probe"
+    ],
+    "manifest_keys": [
+      "created_at_utc",
+      "directories",
+      "jsonl_files",
+      "run_dir",
+      "run_id",
+      "schema_version"
+    ],
+    "jsonl_records_read_from_disk": [
+      {
+        "frame": 0,
+        "kind": "manual_probe"
+      }
+    ],
+    "expected_dirs_exist": true,
+    "expected_files_exist": true,
+    "reports_refusal": {
+      "refused": true,
+      "type": "OutputRootError",
+      "message": "run artifacts must be written under outputs/ or .omo/evidence/: reports/runs/manual_bad"
+    }
+  },
+  "adversarial_qa": {
+    "malformed_input": "Covered by tests and manual probe: reports/runs/* is rejected with OutputRootError.",
+    "stale_state": "Manual probe parsed manifest and JSONL from disk and checked brain/, video/, logs/, manifest.json, events.jsonl, control.jsonl, and arena.jsonl existence.",
+    "dirty_worktree": "No forbidden paths were edited by this task. Initial status already had .omo/, DESIGN.md, reports/, package skeleton, and skeleton tests; final status also showed non-owned configs/ and bridge Todo files that this task left untouched.",
+    "flaky_tests": "Focused unittest command passed twice after implementation.",
+    "misleading_success_output": "Manual probe used json.loads(manifest_path.read_text()) and read_jsonl(events_path) instead of trusting stdout.",
+    "security": "No network, subprocess service, or secret handling is introduced; not applicable beyond path-root refusal.",
+    "performance": "Small stdlib file creation and JSONL append helpers only; no long-running path.",
+    "concurrency": "No shared process state or concurrent writer contract yet; not applicable for Todo 3."
+  },
+  "cleanup": {
+    "manual_outputs_created_under_outputs": false,
+    "temporary_directory_removed": true,
+    "removed_paths": [
+      "/var/folders/tn/blwjzw0n52z91875lgrh0t240000gn/T/tmp1si0rpbp"
+    ],
+    "user_owned_outputs_deleted": false
+  },
+  "changed_files": [
+    "src/digital_fruit_fly/runtime/run_manifest.py",
+    "src/digital_fruit_fly/runtime/logging.py",
+    "tests/test_run_manifest.py",
+    ".omo/evidence/task-3-eon-embodied-fly.json"
+  ],
+  "risks": [
+    "Path policy intentionally allows any path containing an outputs segment for isolated temp tests and normal outputs/runs usage, while rejecting reports and external roots.",
+    "The JSONL reader validates top-level records are JSON objects but does not recursively enforce every nested value shape."
+  ]
+}

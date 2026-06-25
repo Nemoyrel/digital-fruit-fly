@@ -1,0 +1,39 @@
+tick_ms: 15
+duration_sec: 60.0
+seed: 1
+arena:
+  width_mm: 120.0
+  height_mm: 80.0
+  sugar:
+    center_x_mm: 82.0
+    center_y_mm: 40.0
+    radius: 4.0
+    cue_radius: 18.0
+  dust:
+    accumulation_rate_per_sec: 0.08
+    threshold: 0.65
+    cleaning_rate_per_sec: 0.90
+process:
+  host: 127.0.0.1
+  brain_port: 50151
+  body_port: 50152
+camera:
+  enabled: true
+  fps: 30
+  width_px: 1280
+  height_px: 720
+  follow_fly: true
+brain:
+  python: /opt/miniconda3/envs/brain_env/bin/python
+  mapping_path: configs/brain_mapping.yaml
+  shiu_repo_path: external/drosophila_brain_model
+  completeness_path: external/drosophila_brain_model/Completeness_783.csv
+  connectivity_path: external/drosophila_brain_model/Connectivity_783.parquet
+body:
+  python: /opt/miniconda3/envs/flygym_env/bin/python
+decoder:
+  locomotion_threshold: 0.20
+  turn_threshold: 0.15
+  feeding_threshold: 0.40
+  grooming_threshold: 0.35
+  stop_threshold: 0.60

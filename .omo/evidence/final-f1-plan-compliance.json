@@ -1,0 +1,285 @@
+{
+  "task": "Final verification F1 - Plan compliance audit after F2 fix and accepted Todo 23/F3 P0 blocker semantics",
+  "status": "approved",
+  "verdict": "approved",
+  "generated_at_local_date": "2026-06-25",
+  "cwd": "/Users/lins/Code/digital-fruit-fly",
+  "scope": {
+    "edited_files": [
+      ".omo/evidence/final-f1-plan-compliance.json"
+    ],
+    "product_files_edited": false,
+    "plan_boulder_or_ledger_edited": false
+  },
+  "plan_checkbox_audit": {
+    "source": ".omo/plans/eon-embodied-fly.md",
+    "todo_1_to_23": "all_checked",
+    "final_lanes": {
+      "F1_before_audit": "unchecked",
+      "F2": "checked",
+      "F3": "checked",
+      "F4": "checked"
+    },
+    "evidence": {
+      "checkbox_lines_command": "rg -n \"^- \\\\[[ x]\\\\]\" .omo/plans/eon-embodied-fly.md",
+      "checkboxes": {
+        "1": "x",
+        "2": "x",
+        "3": "x",
+        "4": "x",
+        "5": "x",
+        "6": "x",
+        "7": "x",
+        "8": "x",
+        "9": "x",
+        "10": "x",
+        "11": "x",
+        "12": "x",
+        "13": "x",
+        "14": "x",
+        "15": "x",
+        "16": "x",
+        "17": "x",
+        "18": "x",
+        "19": "x",
+        "20": "x",
+        "21": "x",
+        "22": "x",
+        "23": "x",
+        "F1": " ",
+        "F2": "x",
+        "F3": "x",
+        "F4": "x"
+      }
+    }
+  },
+  "artifact_checklist": {
+    "status": "passed",
+    "completed_todo_evidence": {
+      "missing": [],
+      "present": [
+        ".omo/evidence/task-1-eon-embodied-fly.txt",
+        ".omo/evidence/task-2-eon-embodied-fly.txt",
+        ".omo/evidence/task-3-eon-embodied-fly.json",
+        ".omo/evidence/task-4-eon-embodied-fly.txt",
+        ".omo/evidence/task-5-eon-embodied-fly.json",
+        ".omo/evidence/task-6-eon-embodied-fly.json",
+        ".omo/evidence/task-7-eon-embodied-fly.json",
+        ".omo/evidence/task-8-eon-embodied-fly.md",
+        ".omo/evidence/task-9-eon-embodied-fly.json",
+        ".omo/evidence/task-10-eon-embodied-fly.json",
+        ".omo/evidence/task-11-eon-embodied-fly.json",
+        ".omo/evidence/task-12-eon-embodied-fly.json",
+        ".omo/evidence/task-13-eon-embodied-fly.json",
+        ".omo/evidence/task-14-eon-embodied-fly.txt",
+        ".omo/evidence/task-15-eon-embodied-fly.json",
+        ".omo/evidence/task-16-eon-embodied-fly.json",
+        ".omo/evidence/task-17-eon-embodied-fly.txt",
+        ".omo/evidence/task-18-eon-embodied-fly.json",
+        ".omo/evidence/task-19-eon-embodied-fly.json",
+        ".omo/evidence/task-20-eon-embodied-fly.json",
+        ".omo/evidence/task-21-eon-embodied-fly.json",
+        ".omo/evidence/task-22-eon-embodied-fly.json",
+        ".omo/evidence/task-23-eon-embodied-fly.json"
+      ]
+    },
+    "final_lane_evidence": {
+      ".omo/evidence/final-f2-code-quality.txt": {
+        "exists": true,
+        "status_text": "status: passed"
+      },
+      ".omo/evidence/final-f3-real-qa.json": {
+        "exists": true,
+        "parsed_status": "approved"
+      },
+      ".omo/evidence/final-f4-scope-fidelity.md": {
+        "exists": true,
+        "status_text": "status: approved"
+      }
+    },
+    "required_explicit_artifacts": {
+      ".omo/evidence/task-23-eon-embodied-fly.json": true,
+      ".omo/evidence/final-f2-code-quality.txt": true,
+      ".omo/evidence/final-f3-real-qa.json": true,
+      ".omo/evidence/final-f4-scope-fidelity.md": true
+    }
+  },
+  "final_blocker_artifact_audit": {
+    "status": "passed",
+    "semantics": "Todo 23 and F3 accept a precise P0 blocker path: final demo exits nonzero with p0_body_process_timeout, no fake success, and no stale final success artifacts.",
+    "artifacts": {
+      "outputs/runs/eon_demo_final/failure_manifest.json": {
+        "exists": true,
+        "status": "failed",
+        "mode": "separate_processes",
+        "error_code": "p0_body_process_timeout",
+        "error": "body subprocess timed out while connected to brain",
+        "children_alive_after_cleanup": [],
+        "body_status": "timeout",
+        "body_returncode": -15,
+        "body_cleanup": "completed",
+        "brain_status": "ok"
+      },
+      "outputs/runs/eon_demo_smoke/failure_manifest.json": {
+        "exists": true,
+        "status": "failed",
+        "mode": "separate_processes",
+        "error_code": "p0_body_process_timeout",
+        "error": "body subprocess timed out while connected to brain",
+        "children_alive_after_cleanup": [],
+        "body_status": "timeout",
+        "body_returncode": -15,
+        "body_cleanup": "completed",
+        "brain_status": "ok"
+      }
+    },
+    "success_artifact_expectations_under_blocker": {
+      "outputs/runs/eon_demo_final/summary.json": "absent_ok",
+      "outputs/runs/eon_demo_final/video/fly_demo.mp4": "absent_ok",
+      "outputs/runs/eon_demo_final/replay_success_files": "absent_ok",
+      "reason": "The authoritative final result is a precise P0 failure manifest, not a successful final run."
+    },
+    "stale_success_claims": {
+      "status": "passed_with_risk_note",
+      "final_blocker_path": {
+        "summary_json": false,
+        "fly_demo_mp4": false,
+        "replay_success_files": false
+      },
+      "smoke_path": {
+        "fixture_files_found": [
+          "outputs/runs/eon_demo_smoke/behavior_evidence.json",
+          "outputs/runs/eon_demo_smoke/behavior_summary.json",
+          "outputs/runs/eon_demo_smoke/frames.jsonl"
+        ],
+        "fly_demo_mp4": false,
+        "interpretation": "Smoke fixture artifacts coexist with a smoke failure manifest. They are acceptable only as fixture evidence and are not treated as final separate-process success."
+      }
+    }
+  },
+  "guardrail_checklist": {
+    "status": "passed",
+    "body_process_no_brian2_or_shiu_import": {
+      "status": "passed",
+      "command": "rg -n \"brian2|Brian2|drosophila_brain_model|Shiu|Connectivity_783|Completeness_783|external/\" scripts/run_body.py src/digital_fruit_fly/body src/digital_fruit_fly/bridge src/digital_fruit_fly/behavior",
+      "result": "no matches"
+    },
+    "no_eon_91_or_unearned_real_eon_fidelity_claim": {
+      "status": "passed",
+      "command": "rg -n \"91%|0\\\\.91|Eon.*fidel|fidel.*Eon|brain upload|biological equivalence|real Eon|real-Eon|accuracy\" README.md configs src scripts tests docs data .omo/evidence/final-f2-code-quality.txt .omo/evidence/final-f3-real-qa.json .omo/evidence/final-f4-scope-fidelity.md",
+      "result": "only F4 audit text describing absence of the claim matched; no product/documentation success claim found"
+    },
+    "sensory_messages_encoder_no_direct_behavior_labels_upward": {
+      "status": "passed",
+      "evidence": [
+        "src/digital_fruit_fly/bridge/messages.py defines FORBIDDEN_PAYLOAD_KEYS for groom_now/feed_now and rejects behavior shortcuts.",
+        "src/digital_fruit_fly/bridge/sensory_encoder.py rejects behavior, behavior_label, action, action_label, mode, controller_mode, groom_now, and feed_now in upward sensory metadata/channel names.",
+        "tests/test_sensory_encoder.py includes rejection and output-surface tests for forbidden behavior labels."
+      ]
+    },
+    "demo_default_honest_process_mode": {
+      "status": "passed",
+      "evidence": [
+        "scripts/run_demo.py default --process-mode is separate_processes.",
+        "tests/test_demo_runner.py asserts default demo does not produce fixture-mode summary success on separate-process failure.",
+        "current final failure manifests record mode separate_processes and p0_body_process_timeout."
+      ]
+    },
+    "no_fake_fixture_success_for_final": {
+      "status": "passed",
+      "evidence": "outputs/runs/eon_demo_final has a failure_manifest.json and lacks summary.json/fly_demo.mp4/replay success files."
+    }
+  },
+  "protected_path_provenance": {
+    "status": "passed_with_known_preexisting_dirty_external",
+    "parent_git_status_short": {
+      "command": "git status --short",
+      "summary": "Broad untracked project state is present. This audit did not use broad untracked status as a failure signal because the task is a QA lane in an already generated workspace."
+    },
+    "parent_protected_diff": {
+      "command": "git diff --name-only -- .omo/plans/eon-embodied-fly.md .omo/boulder.json .omo/start-work/ledger.jsonl reports DESIGN.md external/drosophila_brain_model",
+      "stdout": "",
+      "interpretation": "No tracked parent-repo diff was found for plan, Boulder, ledger, reports, DESIGN.md, or the external path."
+    },
+    "nested_external_status": {
+      "command": "git -C external/drosophila_brain_model status --short",
+      "stdout": " M example.ipynb"
+    },
+    "nested_external_diff_stat": {
+      "command": "git -C external/drosophila_brain_model diff --stat -- example.ipynb",
+      "stdout": "example.ipynb | 16 +++++++++++-----; 1 file changed, 11 insertions(+), 5 deletions(-)"
+    },
+    "nested_external_diff_hash": {
+      "command": "git -C external/drosophila_brain_model diff -- example.ipynb | shasum -a 256",
+      "stdout": "72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4  -"
+    },
+    "documented_provenance": [
+      ".omo/evidence/task-6-eon-embodied-fly.json records external/drosophila_brain_model/example.ipynb as pre-existing local/upstream state, with the same 16-line stat and hash 72b43b57f864eab0d1bfd29d611b9870ec4c775098f3473d514d129924811ba4.",
+      ".omo/evidence/task-13-eon-embodied-fly.json records the same nested status, diff stat, and hash and states Todo 13 did not edit external files.",
+      ".omo/start-work/ledger.jsonl records that the prior F1 failure was partly caused by treating this protected dirtiness as a failure without the accepted provenance context."
+    ],
+    "assessment": "Known protected dirtiness is reported but not failed: it is limited to nested external/drosophila_brain_model/example.ipynb, matches prior Todo 6/13 provenance, and no current F1 command edited it."
+  },
+  "adversarial_classes": [
+    {
+      "class": "stale_state",
+      "status": "passed",
+      "probe": "Reread plan checkboxes, evidence files, F2/F3/F4 artifacts, and final/smoke blocker manifests from disk in this audit."
+    },
+    {
+      "class": "dirty_worktree",
+      "status": "passed_with_known_preexisting_external_note",
+      "probe": "Ran parent and nested git status/diff checks; separated broad generated/untracked state and known nested external notebook dirtiness from project-caused guardrail violations."
+    },
+    {
+      "class": "misleading_success_output",
+      "status": "passed",
+      "probe": "Parsed failure_manifest.json directly and treated absent final success artifacts as PASS under accepted blocker semantics."
+    },
+    {
+      "class": "hung_long_commands",
+      "status": "passed",
+      "probe": "Used bounded rg/sed/find/git/python metadata reads only; no long runtime demo, replay, or smoke commands were executed."
+    }
+  ],
+  "commands": [
+    "sed -n '1,260p' .omo/plans/eon-embodied-fly.md",
+    "sed -n '260,620p' .omo/plans/eon-embodied-fly.md",
+    "rg -n \"^- \\\\[[ x]\\\\]\" .omo/plans/eon-embodied-fly.md",
+    "find .omo/evidence -maxdepth 1 -type f | sort",
+    "find outputs/runs -maxdepth 3 -type f | sort",
+    "sed -n '1,240p' outputs/runs/eon_demo_final/failure_manifest.json",
+    "sed -n '1,240p' outputs/runs/eon_demo_smoke/failure_manifest.json",
+    "rg -n \"brian2|Brian2|drosophila_brain_model|Shiu|Connectivity_783|Completeness_783|external/\" scripts/run_body.py src/digital_fruit_fly/body src/digital_fruit_fly/bridge src/digital_fruit_fly/behavior",
+    "rg -n \"91%|0\\\\.91|Eon.*fidel|fidel.*Eon|brain upload|biological equivalence|real Eon|real-Eon|accuracy\" README.md configs src scripts tests docs data .omo/evidence/final-f2-code-quality.txt .omo/evidence/final-f3-real-qa.json .omo/evidence/final-f4-scope-fidelity.md",
+    "rg -n \"groom_now|feed_now|behavior|action_label|action label|mode|feeding_started|grooming_started|selected_action|action\" src/digital_fruit_fly/bridge src/digital_fruit_fly/arena src/digital_fruit_fly/body scripts tests/test_sensory_encoder.py tests/test_motor_decoder.py tests/test_body_controllers.py",
+    "rg -n \"process_mode|separate_processes|fixture|p0_body_process_timeout|summary\\\\.json|fly_demo\\\\.mp4|default\" configs/eon_demo.yaml scripts/run_demo.py src/digital_fruit_fly/runtime/config.py tests/test_demo_runner.py .omo/evidence/task-23-eon-embodied-fly.json .omo/evidence/final-f3-real-qa.json .omo/evidence/final-f4-scope-fidelity.md",
+    "git status --short",
+    "git -C external/drosophila_brain_model status --short",
+    "rg -n \"example\\\\.ipynb|protected|pre-existing|preexisting|Todo 6|Todo 13|provenance|external/drosophila_brain_model\" .omo .agents .codex README.md docs tests src scripts configs data",
+    "find outputs/runs/eon_demo_final -maxdepth 3 -type f \\( -name 'summary.json' -o -name 'fly_demo.mp4' -o -name '*replay*' -o -name 'behavior_summary.json' -o -name 'behavior_evidence.json' \\) -print | sort",
+    "find outputs/runs/eon_demo_smoke -maxdepth 3 -type f \\( -name 'summary.json' -o -name 'fly_demo.mp4' -o -name '*replay*' -o -name 'behavior_summary.json' -o -name 'behavior_evidence.json' -o -name 'frames.jsonl' \\) -print | sort",
+    "python3 - <<'PY' ... plan/evidence/blocker metadata parser ... PY",
+    "sed -n '1,120p' .omo/evidence/final-f2-code-quality.txt",
+    "sed -n '1,140p' .omo/evidence/final-f3-real-qa.json",
+    "sed -n '1,120p' .omo/evidence/final-f4-scope-fidelity.md",
+    "sed -n '1,220p' .omo/evidence/task-23-eon-embodied-fly.json",
+    "git diff --name-only -- .omo/plans/eon-embodied-fly.md .omo/boulder.json .omo/start-work/ledger.jsonl reports DESIGN.md external/drosophila_brain_model",
+    "git -C external/drosophila_brain_model diff --stat -- example.ipynb",
+    "git -C external/drosophila_brain_model diff -- example.ipynb | shasum -a 256",
+    "find /private/tmp -maxdepth 1 \\( -name 'dff_final_f1*' -o -name 'final-f1-*' \\) -print",
+    "wc -l .omo/evidence/final-f1-plan-compliance.json"
+  ],
+  "cleanup": {
+    "temp_files_created": [],
+    "temp_files_removed": [],
+    "temp_file_check_command": "find /private/tmp -maxdepth 1 \\( -name 'dff_final_f1*' -o -name 'final-f1-*' \\) -print",
+    "temp_file_check_result": "no matches"
+  },
+  "risks": [
+    "The accepted final state remains a P0 blocker, not a successful embodied FlyGym/Brian2 final demo.",
+    "Fixture behavior artifacts coexist in outputs/runs/eon_demo_smoke; consumers should use failure_manifest.json and task-23/F3 evidence as authoritative for final acceptance status.",
+    "F4 evidence was written before the current outputs/runs/eon_demo_final/failure_manifest.json existed and therefore discusses final_manifest as absent; current F1 reparse confirms the final manifest now exists and matches the same accepted P0 blocker.",
+    "The parent repository is broadly untracked/generated, so F1 relies on protected-path diff/provenance rather than broad status cleanliness."
+  ]
+}

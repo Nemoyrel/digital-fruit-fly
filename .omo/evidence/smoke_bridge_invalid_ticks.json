@@ -1,0 +1,7 @@
+{
+  "error": "ticks must be positive",
+  "exit_code": 2,
+  "script": "smoke_bridge",
+  "status": "failed",
+  "unknown_args": []
+}
