@@ -1,1 +1,0 @@
-"""Environment-neutral package for the Digital Fruit Fly prototype."""

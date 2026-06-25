@@ -1,2 +1,0 @@
-"""Brain-side integration interfaces."""
-
