@@ -1,9 +1,4 @@
-"""存档两个「决定性条件」的精确数值，供报告 §9.3 与 I1 取证可复算。
-
-补 probe_dn_emergence.json 缺的字段：报告引用的 363/40 spike、450ms、峰值 active、
-单窗挂钟耗时此前来自一次性命令、不在任何存档里（踩了「可复算」标尺）。本脚本用与
-probe_dn_emergence.py 同一套读法，把两条件重跑并落盘。
-
+"""
 条件 1：JON 仅左 5Hz，跑满 450ms(30 窗)，fresh 网络。验证「低频感觉点亮自身却不传播到 DN」：
   记录 总 spike / JON 自身 spike / 下游非 JON spike / 各 DN spike / 峰值 active / 逐窗挂钟 ms。
 条件 2：糖 sugar_grn 150Hz，跑满 450ms，fresh 网络。读法健全性对照(MN9 应 >0)：
