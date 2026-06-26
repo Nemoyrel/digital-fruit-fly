@@ -8,7 +8,7 @@
 
 身体与脑需要**两个相互依赖冲突的 conda 环境**，无法共享同一进程：
 
-- `flygym_env` —— FlyGym/NeuroMechFly + numpy/matplotlib/imageio，运行身体模型。
+- `flygym_env` —— FlyGym2/NeuroMechFly + numpy/matplotlib/imageio，运行身体模型。
 - `brain_env` —— Brian2 + Cython + C 编译器，运行脑模型。
 
 
@@ -39,11 +39,11 @@ Shiu 仓库与连接组文件已克隆至本地external/drosophila_brain_model/�
 ## 目录结构
 - `scripts/` —— 存储最终运行脚本，解析用户配置的参数。
 - `src/` —— 存储全部模块。
-- `data` —— 如有运行所需的静态原始数据，存储在此（例如脑模型的原始输出数据）。
+- `data` —— 运行所需的静态原始数据存储在此（例如脑连接组的.csv和.parquet）。
 - `configs/` —— 存储用户可配置参数的配置文件。
 - `external/drosophila_brain_model/` —— 上游 Shiu 克隆（gitignore，大型 parquet/csv）。
 - `outputs/` —— 生成的产物（gitignore）。
-- `tests/` —— 测试代码，开发时如有必要，只进行最关键的测试。
+- `tests/` —— 测试代码。
 
 ## 参考
 
