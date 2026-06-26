@@ -23,15 +23,12 @@
 /opt/miniconda3/envs/flygym_env/bin/python scripts/run_body.py     # 终端 2：身体
 ```
 
-配置见 `configs/simulation.json`；产物（双画面 MP4 + 遥测 JSON）写到 `outputs/`。
+配置见 `configs/simulation.json`；运行后在outputs/目录下输出果蝇运动视频 + 遥测 JSON）。
 
 ### 当前状态
 
 具身闭环已端到端跑通：FlyGym 身体 + Shiu 783 全连接组脑（在线连续积分）+ **直驱 DN 控制句柄**，
 果蝇经脑路由的 DN 转向趋食、接触触发 MN9 进食、灰尘触发 aDN1 梳理，三行为循环并输出左身体右脑的并排视频。
-
-实现架构、相对计划的调整、以及关键实测发现（DN 行为不涌现须直驱句柄、连续积分锁死、15ms 非实时等）
-详见 **`docs/IMPLEMENTATION_NOTES.md`**；总体开发计划见 `docs/DEVELOPMENT_PLAN.md`。
 
 里程碑：M1 脑·糖→MN9 ✅ / M2 体·行走 ✅ / M3 IPC 握手 ✅ / M4 趋糖前进 ✅ / M5 多行为 + M6 视频 ✅
 （测试：`tests/test_brain_sugar_grn.py`、`test_body_walk.py`、`test_bridge_ipc.py`）
