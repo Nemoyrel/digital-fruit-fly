@@ -6,5 +6,6 @@ venv/
 outputs/
 docs/
 .omo/
+external/
 AGENTS.md
 CLAUDE.md

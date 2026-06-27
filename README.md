@@ -38,7 +38,7 @@ Shiu 仓库与连接组文件已克隆至本地external/drosophila_brain_model/�
 ## 目录结构
 - `configs/` —— 存储用户可配置参数的配置文件。
 - `data` —— 运行所需的静态原始数据存储在此（例如脑全连接组的.csv和.parquet）。
-- `external/drosophila_brain_model/` —— 上游 Shiu 克隆。
+- `external/drosophila_brain_model/` —— 上游 Shiu 克隆（gitignore）。
 - `reports/` —— 技术报告。
 - `scripts/` —— 存储最终运行脚本，解析用户配置的参数。
 - `src/` —— 存储全部模块。
