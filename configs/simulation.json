@@ -1,6 +1,6 @@
 {
   "run": {
-    "duration_s": 14.0,
+    "duration_s": 10.0,
     "seed": 1,
     "warmup_s": 0.05,
     "log_every_steps": 300
@@ -8,15 +8,18 @@
   "scene": {
     "arena_half_size_mm": 50.0,
     "food_position_mm": [
-      28.0,
-      0.0
+      25.0,
+      25.0
     ],
-    "food_cue_radius_mm": 28.0,
-    "food_contact_radius_mm": 3.5,
-    "dust_accumulation_rate_per_s": 0.22,
+    "food_cue_radius_mm": 18.0,
+    "food_contact_radius_mm": 2.0,
+    "dust_accumulation_rate_per_s": 0.33,
     "dust_threshold": 1.0,
     "bilateral_gain": 0.7,
-    "dust_count": 200
+    "dust_count": 200,
+    "boundary_margin_mm": 10.0,
+    "boundary_turn_gain": 0.5,
+    "boundary_slowdown": 0.6
   },
   "ipc": {
     "host": "127.0.0.1",
@@ -37,14 +40,14 @@
   "camera": {
     "pos_offset": [
       0,
-      -7.5,
-      6
+      -10,
+      10
     ],
-    "fovy": 35.0
+    "fovy": 100.0
   },
   "brain_viz": {
     "panel_width": 520,
-    "n_points": 4000,
+    "n_points": 15000,
     "activity_norm": 2.0,
     "activity_decay": 0.9
   },
@@ -52,8 +55,23 @@
     "grooming_duration_s": 1.0,
     "feeding_hold_s": 1.6,
     "feeding_mn9_threshold_hz": 25.0,
-    "turn_gain": 2.2,
-    "forward_gain": 1.1,
-    "feeding_refractory_s": 2.0
+    "turn_gain": 1.2,
+    "forward_gain": 1.15,
+    "max_turn": 0.35,
+    "min_forward": 0.3,
+    "arrive_slowdown": 0.2,
+    "feeding_refractory_s": 2.0,
+    "grooming_readout_threshold_hz": 8.0,
+    "grooming_refractory_s": 0.0
+  },
+  "brain": {
+    "forward_hz": 150.0,
+    "forward_base": 0.7,
+    "turn_hz": 150.0,
+    "search_hz": 55.0,
+    "search_freq_hz": 0.7,
+    "sugar_max_hz": 150.0,
+    "groom_jon_hz": 160.0,
+    "cue_eps": 0.05
   }
 }

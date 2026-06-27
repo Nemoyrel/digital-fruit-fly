@@ -45,6 +45,7 @@ def main() -> None:
     worker = None
     if args.start_worker:
         cmd = [str(ipc["brain_env_python"]), str(PROJECT_ROOT / "scripts" / "run_brain.py"),
+               "--config", str(args.config),
                "--port", str(ipc["port"]), "--window-ms", str(ipc.get("window_ms", 15.0))]
         print(json.dumps({"event": "starting_worker", "cmd": cmd}), flush=True)
         worker = subprocess.Popen(cmd, cwd=str(PROJECT_ROOT))

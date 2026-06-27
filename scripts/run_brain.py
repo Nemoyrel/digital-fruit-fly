@@ -20,15 +20,23 @@ def main() -> None:
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--window-ms", type=float, default=15.0)
+    parser.add_argument("--config", type=Path, default=PROJECT_ROOT / "configs" / "simulation.json",
+                        help="读取其中的 brain 组作为脑后端参数（搜索/趋化/进食驱动）")
     parser.add_argument("--smoke", action="store_true", help="建网+一次合成请求后退出")
     args = parser.parse_args()
 
-    from digital_fruit_fly.brain.backend import BrainBackend
+    from digital_fruit_fly.brain.backend import BrainBackend, BackendConfig
     from digital_fruit_fly.bridge.ipc import JsonLineServer
     from digital_fruit_fly.bridge.messages import SensoryMessage
 
-    print(json.dumps({"event": "brain_building", "window_ms": args.window_ms}), flush=True)
-    backend = BrainBackend.build(window_ms=args.window_ms)
+    backend_cfg = None
+    try:
+        backend_cfg = BackendConfig.from_dict(json.loads(args.config.read_text()).get("brain"))
+    except FileNotFoundError:
+        pass
+    print(json.dumps({"event": "brain_building", "window_ms": args.window_ms,
+                      "config": str(args.config)}), flush=True)
+    backend = BrainBackend.build(window_ms=args.window_ms, backend_config=backend_cfg)
     info = backend.startup_info()
     print(json.dumps({"event": "brain_ready", "info": info}, ensure_ascii=False), flush=True)
 

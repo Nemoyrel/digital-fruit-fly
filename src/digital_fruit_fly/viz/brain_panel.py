@@ -161,6 +161,7 @@ class BrainPanelRenderer:
         behavior: str = "foraging",
         feeding_score: float = 0.0,
         grooming_score: float = 0.0,
+        grooming_hz: float = 0.0,
         active_neuron_count: int = 0,
         total_neuron_count: int = 0,
         window_ms: float = 0.0,
@@ -195,7 +196,7 @@ class BrainPanelRenderer:
         self._hud.set_text(
             f"behavior: {behavior}\n"
             f"active neurons: {active_neuron_count}/{total_neuron_count}\n"
-            f"feeding {fs:.2f}  grooming {gs:.2f}  win {window_ms:.0f}ms"
+            f"feeding {fs:.2f}  grooming {gs:.2f} ({grooming_hz:.0f}Hz)  win {window_ms:.0f}ms"
         )
 
         self.canvas.draw()

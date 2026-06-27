@@ -94,6 +94,11 @@ class FlyGymBody:
             kwargs["pos_offset"] = tuple(camera_config["pos_offset"])
         if "fovy" in camera_config:
             kwargs["fovy"] = float(camera_config["fovy"])
+        # 可选自定义朝向（xyaxes 6 元组）：用更接近水平的低俯角才能露出远景天空与丘陵。
+        if "rotation_xyaxes" in camera_config:
+            from flygym.utils.math import Rotation3D
+
+            kwargs["rotation"] = Rotation3D("xyaxes", tuple(camera_config["rotation_xyaxes"]))
         return self.fly.add_tracking_camera(**kwargs)
 
     # ---- lifecycle ----

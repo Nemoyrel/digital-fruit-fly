@@ -25,6 +25,28 @@ def _clip(v, lo, hi):
     return max(lo, min(hi, v))
 
 
+def _boundary_steer(left, right, pose, *, half, margin, turn_gain, slowdown):
+    """接近围墙时转向场地中心并减速，避免果蝇冲出有界场地。
+
+    仅在搜索/觅食（foraging）行走态调用——搜索阶段无气味 cue 约束方向，
+    若不加边界处理，方向一偏就会一路冲出墙外。
+    """
+    x, y = pose.thorax_xyz_mm[0], pose.thorax_xyz_mm[1]
+    d_wall = half - max(abs(x), abs(y))               # 到最近轴向墙的距离
+    if d_wall >= margin:
+        return left, right
+    strength = _clip((margin - d_wall) / max(1e-6, margin), 0.0, 1.0)
+    cn = (x * x + y * y) ** 0.5
+    if cn < 1e-6:
+        return left, right
+    cx, cy = -x / cn, -y / cn                          # 指向场地中心的单位向量
+    hx, hy = pose.heading_xy
+    cross = hx * cy - hy * cx                          # >0：中心在航向左侧 → 应左转
+    fwd = 0.5 * (left + right) * (1.0 - slowdown * strength)   # 近墙减速
+    turn = 0.5 * (right - left) + turn_gain * strength * (1.0 if cross >= 0 else -1.0)
+    return fwd - turn, fwd + turn
+
+
 def run_embodied_loop(*, config: dict[str, Any], client: JsonLineClient,
                       output_dir: Path, no_video: bool = False) -> dict[str, Any]:
     output_dir = Path(output_dir)
@@ -53,6 +75,10 @@ def run_embodied_loop(*, config: dict[str, Any], client: JsonLineClient,
     window_s = float(config["ipc"].get("window_ms", 15.0)) / 1000.0
     sync_every = max(1, round(window_s / body.timestep))
     n_steps = int(float(run_cfg["duration_s"]) / body.timestep)
+    arena_half = float(scene_cfg["arena_half_size_mm"])
+    bnd_margin = float(scene_cfg.get("boundary_margin_mm", 12.0))
+    bnd_turn = float(scene_cfg.get("boundary_turn_gain", 0.5))
+    bnd_slow = float(scene_cfg.get("boundary_slowdown", 0.6))
 
     rows: list[dict] = []
     brain_frames: list[np.ndarray] = []
@@ -80,21 +106,29 @@ def run_embodied_loop(*, config: dict[str, Any], client: JsonLineClient,
             )
             resp = client.request(msg)
             decision = motor.decide(resp, time_s=t, dust_level=sensory.dust_level_left,
-                                    food_contact=sensory.food_contact)
+                                    food_contact=sensory.food_contact,
+                                    cue=max(sensory.food_cue_left, sensory.food_cue_right))
             if motor.just_completed_grooming:
                 encoder.clear_dust()
                 _stamp(events, "first_dust_cleared_s", True, t)
             mn9 = resp.readout_rates_hz.get("mn9", 0.0)
-            adn1 = (resp.readout_rates_hz.get("adn1_left", 0.0) + resp.readout_rates_hz.get("adn1_right", 0.0)) / 2
+            # 梳理 viz：用 motor 的 grooming_readout EMA（真脑通路 JON→aBN1→aDN 激活强度，
+            # 即触发梳理用的信号），而非 aDN1 单读（在线 15ms 窗量化跳动大）。
+            groom_sig = motor.grooming_signal_hz
             last = {"behavior": decision.behavior, "left": decision.left, "right": decision.right,
-                    "mn9": mn9, "feeding": _clip(mn9 / 100, 0, 1), "grooming": _clip(adn1 / 100, 0, 1),
+                    "mn9": mn9, "feeding": _clip(mn9 / 100, 0, 1),
+                    "grooming": _clip(groom_sig / 40.0, 0, 1), "grooming_hz": groom_sig,
                     "active": resp.active_neuron_count, "total": resp.total_neuron_count,
                     "forward": decision.forward, "turn": decision.turn,
                     "wall_ms": resp.brain_wall_time_ms}
             if resp.neuron_activity:
                 smoothed = np.asarray(resp.neuron_activity, dtype=float)
 
-        action = body.apply_behavior(last["behavior"], last["left"], last["right"], t)
+        lft, rgt = last["left"], last["right"]
+        if last["behavior"] == "foraging":
+            lft, rgt = _boundary_steer(lft, rgt, pose, half=arena_half,
+                                       margin=bnd_margin, turn_gain=bnd_turn, slowdown=bnd_slow)
+        action = body.apply_behavior(last["behavior"], lft, rgt, t)
         rendered = body.step(render=not no_video)
 
         behavior_counts[last["behavior"]] = behavior_counts.get(last["behavior"], 0) + 1
@@ -107,7 +141,8 @@ def run_embodied_loop(*, config: dict[str, Any], client: JsonLineClient,
             if smoothed.size:
                 smoothed = smoothed * activity_decay
             img = panel.render(smoothed, behavior=last["behavior"], feeding_score=last["feeding"],
-                               grooming_score=last["grooming"], active_neuron_count=last["active"],
+                               grooming_score=last["grooming"], grooming_hz=last.get("grooming_hz", 0.0),
+                               active_neuron_count=last["active"],
                                total_neuron_count=last["total"], window_ms=window_s * 1000)
             brain_frames.append(img)
 
