@@ -5,7 +5,6 @@ __pycache__/
 venv/
 outputs/
 external/drosophila_brain_model/
-reports/
 docs/
 .omo/
 # 大型可再生数据（FlyWire 注释表，由 flyconnectome/flywire_annotations 重新下载）
